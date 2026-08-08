@@ -43,19 +43,19 @@ endif;
 <div class="p-margin-lg bg-surface flex flex-col md:flex-row gap-4 justify-between items-start md:items-center rounded-t-lg">
 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
 <div class="relative">
-<select class="ld-fg-filter-integration appearance-none bg-surface-container-lowest border-outline-variant text-on-surface font-body-sm text-body-sm px-3 py-1.5 pr-8 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]">
+<select class="ld-fg-filter-integration ld-fg-select bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm px-3 py-1.5 pr-9 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]">
 <option value="all"><?php esc_html_e( 'All Integrations', 'lancedesk-form-guard' ); ?></option>
 <?php foreach ( $available as $slug => $adapter ) : ?>
 <option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $adapter->get_label() ); ?></option>
 <?php endforeach; ?>
 </select>
-<span class="ld-fg-icon material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]">expand_more</span>
+<span class="ld-fg-icon material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[16px]" aria-hidden="true">expand_more</span>
 </div>
 </div>
 <div class="flex items-center gap-3 w-full md:w-auto">
 <div class="relative flex-1 md:w-64">
-<span class="ld-fg-icon material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
-<input class="ld-fg-forms-search w-full bg-surface-container-lowest border-outline-variant text-on-surface font-body-sm text-body-sm pl-8 pr-3 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]" placeholder="<?php esc_attr_e( 'Search forms...', 'lancedesk-form-guard' ); ?>" type="text"/>
+<span class="ld-fg-icon material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none" aria-hidden="true">search</span>
+<input class="ld-fg-forms-search w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm pl-10 pr-3 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]" placeholder="<?php esc_attr_e( 'Search forms...', 'lancedesk-form-guard' ); ?>" type="text"/>
 </div>
 </div>
 </div>

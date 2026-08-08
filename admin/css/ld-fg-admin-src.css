@@ -130,6 +130,15 @@
   margin: 0;
 }
 
+/* Kill WP admin native select arrow when we draw our own chevron */
+.ld-fg-admin-wrap select.ld-fg-select,
+.ld-fg-admin-wrap select.appearance-none {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none !important;
+}
+
 .ld-fg-admin-avatar {
   width: 28px !important;
   height: 28px !important;
