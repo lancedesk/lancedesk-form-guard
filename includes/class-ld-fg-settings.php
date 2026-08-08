@@ -105,15 +105,28 @@ final class LD_FG_Settings {
 	/**
 	 * Update settings (partial merge).
 	 *
+	 * Indexed lists (e.g. protected_forms) are replaced wholesale — array_replace_recursive
+	 * cannot shorten numeric arrays and would leave stale entries.
+	 *
 	 * @param array<string, mixed> $patch Settings patch.
 	 *
 	 * @return bool
 	 */
 	public static function update( array $patch ): bool {
 		$current = self::get();
-		$merged  = array_replace_recursive( $current, $patch );
 
-		return update_option( self::OPTION_KEY, $merged );
+		$list_keys = array( 'protected_forms', 'provider_order' );
+
+		foreach ( $list_keys as $key ) {
+			if ( array_key_exists( $key, $patch ) ) {
+				$current[ $key ] = is_array( $patch[ $key ] ) ? array_values( $patch[ $key ] ) : array();
+				unset( $patch[ $key ] );
+			}
+		}
+
+		$merged = empty( $patch ) ? $current : array_replace_recursive( $current, $patch );
+
+		return (bool) update_option( self::OPTION_KEY, $merged );
 	}
 
 	/**

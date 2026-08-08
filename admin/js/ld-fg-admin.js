@@ -23,13 +23,28 @@
 		}).then(function (r) { return r.json(); });
 	}
 
-	// Toggle form protection
+	// Toggle form protection — save immediately via AJAX.
 	document.querySelectorAll('.ld-fg-toggle-form').forEach(function (input) {
 		input.addEventListener('change', function () {
+			var wanted = input.checked;
+			input.disabled = true;
 			post('ld_fg_toggle_form', {
-				integration: input.getAttribute('data-integration'),
-				form_id: input.getAttribute('data-form-id'),
-				protected: input.checked ? '1' : '0'
+				integration: input.getAttribute('data-integration') || '',
+				form_id: input.getAttribute('data-form-id') || '',
+				is_protected: wanted ? '1' : '0'
+			}).then(function (payload) {
+				input.disabled = false;
+				if (!payload || !payload.success) {
+					input.checked = !wanted;
+					window.console && console.warn('Form Guard: toggle save failed', payload);
+					return;
+				}
+				var saved = !!(payload.data && payload.data.protected);
+				input.checked = saved;
+			}).catch(function (err) {
+				input.disabled = false;
+				input.checked = !wanted;
+				window.console && console.warn('Form Guard: toggle request error', err);
 			});
 		});
 	});
