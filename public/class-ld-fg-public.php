@@ -22,6 +22,13 @@ final class LD_FG_Frontend {
 	private bool $assets_enqueued = false;
 
 	/**
+	 * Forms that already received trap markup this request.
+	 *
+	 * @var array<string, true>
+	 */
+	private array $printed = array();
+
+	/**
 	 * Bootstrap front-end hooks.
 	 *
 	 * @return void
