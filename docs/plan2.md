@@ -44,7 +44,7 @@ CAPTCHA stops dumb bots. It does not stop humans (or semi-automated tools) stuff
 ### In scope
 
 - Soft-detect form plugins; no hard `Requires Plugins` header
-- Adapters: **WPForms**, **Contact Form 7**, **Gravity Forms**, **Quform**
+- Adapters: **WPForms**, **Contact Form 7**, **Gravity Forms**, **Quform**, **Ninja Forms**
 - Auto-list forms; **per-form enable** (+ optional “protect all forms of this type”)
 - Layer 1 heuristics (always free/local)
 - Layer 2 LLM via Groq + optional OpenAI / Anthropic fallback (encrypted keys)
@@ -59,7 +59,7 @@ CAPTCHA stops dumb bots. It does not stop humans (or semi-automated tools) stuff
 - Comment spam / `wp_mail` global filtering
 - Shared cross-site IP blocklist SaaS
 - Hard IP ban on first offense
-- Fluent Forms / Formidable / Ninja Forms (adapters later)
+- Fluent Forms / Formidable (adapters later)
 - Stitch → production CSS pixel-perfect in same PR as scaffold (Stitch first, then implement)
 
 ---
@@ -107,6 +107,7 @@ LD_FG_Form_Adapter
 | Contact Form 7 | `wpcf7_before_send_mail` / validation |
 | Gravity Forms | `gform_validation` / pre-submission |
 | Quform | Pre-process / validation filters |
+| Ninja Forms | `ninja_forms_submit_data` / `ninja_forms_submission_actions` |
 
 Exact hook names confirmed against each plugin’s current docs at coding time.
 

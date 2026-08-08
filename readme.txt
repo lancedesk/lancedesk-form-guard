@@ -17,7 +17,7 @@ LanceDesk Form Guard protects contact and registration forms from spam using a t
 * **Layer 1 — Heuristics:** Fast deterministic checks for BBCode injection, link stuffing, honeypot fields, and too-fast submissions.
 * **Layer 2 — AI Analysis:** Optional semantic spam classification via Groq, OpenAI, or Anthropic.
 
-Supports WPForms, Contact Form 7, Gravity Forms, and Quform. Logs blocked and quarantined submissions with hashed IP and email values for privacy.
+Supports WPForms, Contact Form 7, Gravity Forms, Quform, and Ninja Forms. Logs blocked and quarantined submissions with hashed IP and email values for privacy.
 
 == Installation ==
 
@@ -30,7 +30,7 @@ Supports WPForms, Contact Form 7, Gravity Forms, and Quform. Logs blocked and qu
 
 = Which form plugins are supported? =
 
-WPForms, Contact Form 7, Gravity Forms, and Quform are supported when installed and active.
+WPForms, Contact Form 7, Gravity Forms, Quform, and Ninja Forms are supported when installed and active.
 
 = What happens if the AI provider is unavailable? =
 

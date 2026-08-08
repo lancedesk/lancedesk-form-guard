@@ -9,7 +9,7 @@ WordPress plugin that protects contact form submissions with local heuristics an
 ## Features
 
 - Soft-detect form plugins (no hard dependency)
-- Adapters: WPForms, Contact Form 7, Gravity Forms, Quform
+- Adapters: WPForms, Contact Form 7, Gravity Forms, Quform, Ninja Forms
 - Per-form enable toggles
 - **Layer 1** local heuristics (honeypot, fast-submit, link/BBCode stuffing)
 - **Layer 2** optional AI (BYO keys: Groq, OpenAI, Anthropic) with fallback

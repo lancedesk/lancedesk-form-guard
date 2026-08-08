@@ -97,6 +97,7 @@ Generate each as a **separate Stitch frame**. Prefer desktop; add mobile only fo
   - Contact Form 7  
   - Gravity Forms  
   - Quform  
+  - Ninja Forms  
 - Each row: icon placeholder, name, status badge:
   - **Active** (green) — plugin installed & adapter hooked  
   - **Installed — inactive** (amber) — plugin present but adapter off / dependency  
@@ -223,7 +224,7 @@ Checklist with checkmarks; primary CTA on the first incomplete step.
 ```
 Design a WordPress wp-admin plugin UI for “LanceDesk Form Guard”.
 
-Product: Blocks spam in contact form submissions (WPForms, Contact Form 7, Gravity Forms, Quform) using local heuristics first, then optional AI (user’s own API keys). Admin-only screens.
+Product: Blocks spam in contact form submissions (WPForms, Contact Form 7, Gravity Forms, Quform, Ninja Forms) using local heuristics first, then optional AI (user’s own API keys). Admin-only screens.
 
 Visual system:
 - Light WordPress admin: background #f0f0f1, white panels, border #c3c4c7, radius 8px

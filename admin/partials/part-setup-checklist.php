@@ -44,7 +44,7 @@ $step3_active = $has_adapter && $has_provider && ! $has_protected;
 </div>
 <div class="flex-grow relative z-10">
 <h3 class="font-headline-md text-headline-md text-on-surface <?php echo $has_adapter ? 'line-through opacity-70' : ''; ?>"><?php esc_html_e( 'Install and activate a form plugin', 'lancedesk-form-guard' ); ?></h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 <?php echo $has_adapter ? 'opacity-70' : ''; ?>"><?php echo $has_adapter ? esc_html__( 'Great job! We detected an active form plugin on your site.', 'lancedesk-form-guard' ) : esc_html__( 'Install WPForms, Contact Form 7, Gravity Forms, or Quform.', 'lancedesk-form-guard' ); ?></p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 <?php echo $has_adapter ? 'opacity-70' : ''; ?>"><?php echo $has_adapter ? esc_html__( 'Great job! We detected an active form plugin on your site.', 'lancedesk-form-guard' ) : esc_html__( 'Install WPForms, Contact Form 7, Gravity Forms, Quform, or Ninja Forms.', 'lancedesk-form-guard' ); ?></p>
 <?php if ( ! $has_adapter ) : ?>
 <a class="mt-3 bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg transition-colors shadow-sm inline-flex items-center" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-integrations' ) ); ?>">
 <span class="ld-fg-icon material-symbols-outlined text-[18px] mr-2">hub</span>

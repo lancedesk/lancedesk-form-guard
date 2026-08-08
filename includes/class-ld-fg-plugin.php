@@ -71,6 +71,7 @@ final class LD_FG_Plugin {
 		require_once LD_FG_PLUGIN_DIR . 'includes/adapters/class-ld-fg-adapter-cf7.php';
 		require_once LD_FG_PLUGIN_DIR . 'includes/adapters/class-ld-fg-adapter-gravity.php';
 		require_once LD_FG_PLUGIN_DIR . 'includes/adapters/class-ld-fg-adapter-quform.php';
+		require_once LD_FG_PLUGIN_DIR . 'includes/adapters/class-ld-fg-adapter-ninja.php';
 	}
 
 	/**
@@ -86,6 +87,7 @@ final class LD_FG_Plugin {
 			'cf7'     => new LD_FG_Adapter_CF7(),
 			'gravity' => new LD_FG_Adapter_Gravity(),
 			'quform'  => new LD_FG_Adapter_Quform(),
+			'ninja'   => new LD_FG_Adapter_Ninja(),
 		);
 
 		// Register after other plugins have loaded (we are on plugins_loaded).

@@ -15,6 +15,7 @@ $adapters = array(
 	'cf7'     => array( 'icon' => 'mail', 'class' => LD_FG_Adapter_CF7::class ),
 	'gravity' => array( 'icon' => 'layers', 'class' => LD_FG_Adapter_Gravity::class ),
 	'quform'  => array( 'icon' => 'edit_note', 'class' => LD_FG_Adapter_Quform::class ),
+	'ninja'   => array( 'icon' => 'bolt', 'class' => LD_FG_Adapter_Ninja::class ),
 );
 ?>
 <div class="flex flex-col w-full">
