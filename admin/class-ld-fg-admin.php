@@ -335,6 +335,8 @@ final class LD_FG_Admin {
 			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.', 'lancedesk-form-guard' ) );
 		}
 
+		$this->maybe_enable_when_forms_protected();
+
 		$ld_fg_page_key   = $page_key;
 		$ld_fg_nav_items  = self::get_nav_items();
 		$ld_fg_partial    = LD_FG_PLUGIN_DIR . 'admin/partials/' . $partial_file;
@@ -346,6 +348,21 @@ final class LD_FG_Admin {
 		}
 
 		require LD_FG_PLUGIN_DIR . 'admin/partials/shell.php';
+	}
+
+	/**
+	 * If any forms are marked protected but the master switch is off, turn it on.
+	 * Otherwise the engine silently skips (no logs / no blocks).
+	 *
+	 * @return void
+	 */
+	private function maybe_enable_when_forms_protected(): void {
+		$settings  = LD_FG_Settings::get();
+		$protected = isset( $settings['protected_forms'] ) ? (array) $settings['protected_forms'] : array();
+
+		if ( empty( $settings['enabled'] ) && ! empty( $protected ) ) {
+			LD_FG_Settings::update( array( 'enabled' => 1 ) );
+		}
 	}
 
 	/** @return void */
@@ -445,11 +462,21 @@ final class LD_FG_Admin {
 			wp_send_json_error( array( 'message' => __( 'Could not save protection state.', 'lancedesk-form-guard' ) ), 500 );
 		}
 
+		// Protecting a form should turn the master switch on — otherwise the engine
+		// silently no-ops (no logs, no blocks) and setup step 4 never completes.
+		if ( $is_protected ) {
+			$current = LD_FG_Settings::get();
+			if ( empty( $current['enabled'] ) ) {
+				LD_FG_Settings::update( array( 'enabled' => 1 ) );
+			}
+		}
+
 		wp_send_json_success(
 			array(
 				'protect'         => $is_protected ? 1 : 0,
 				'key'             => $key,
 				'protected_forms' => $list,
+				'enabled'         => ! empty( LD_FG_Settings::get()['enabled'] ) ? 1 : 0,
 			)
 		);
 	}

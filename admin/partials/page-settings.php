@@ -78,7 +78,7 @@ $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 <p class="font-body-sm text-body-sm text-on-surface-variant mb-margin-sm leading-relaxed"><?php esc_html_e( 'By enabling form protection, submission data may be securely transmitted to configured AI providers for spam analysis. Only necessary form fields are processed. We recommend reviewing your privacy policy to ensure compliance with local data regulations regarding third-party processing.', 'lancedesk-form-guard' ); ?></p>
 <div class="flex items-start mt-4 pt-4 border-t border-secondary-container/30">
 <div class="flex items-center h-5">
-<input class="w-4 h-4 text-primary bg-surface-container-lowest border-outline-variant rounded focus:ring-primary/20 focus:ring-2 cursor-pointer transition-colors" id="ld-fg-privacy-ack" name="privacy_ack" type="checkbox" value="1" <?php checked( $privacy_ack ); ?> required />
+<input class="w-4 h-4 text-primary bg-surface-container-lowest border-outline-variant rounded focus:ring-primary/20 focus:ring-2 cursor-pointer transition-colors" id="ld-fg-privacy-ack" name="privacy_ack" type="checkbox" value="1" <?php checked( $privacy_ack ); ?> />
 </div>
 <div class="ml-3 text-sm">
 <label class="font-label-md text-label-md text-on-surface cursor-pointer select-none" for="ld-fg-privacy-ack"><?php esc_html_e( 'I acknowledge that submission data will be processed by external AI providers.', 'lancedesk-form-guard' ); ?></label>

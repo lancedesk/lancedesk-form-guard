@@ -72,25 +72,36 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 	 * @inheritDoc
 	 */
 	public function register_hooks(): void {
-		add_action( 'wpforms_process_before', array( $this, 'handle_process_before' ), 5, 2 );
+		// After field validation/formatting — $fields have value keys; errors stop entry + notifications.
+		// Docs: https://wpforms.com/developers/wpforms_process/
+		add_action( 'wpforms_process', array( $this, 'handle_process' ), 5, 3 );
 	}
 
 	/**
-	 * Intercept WPForms submission.
+	 * Intercept WPForms submission after fields are validated and formatted.
 	 *
-	 * @param array<string, mixed> $fields Form fields.
-	 * @param array<string, mixed> $entry  Entry data.
+	 * @param array<int|string, mixed> $fields    Sanitized field values.
+	 * @param array<string, mixed>     $entry     Raw entry / POST payload.
+	 * @param array<string, mixed>     $form_data Form settings and ID.
 	 *
 	 * @return void
 	 */
-	public function handle_process_before( array $fields, array $entry ): void {
-		$form_id = isset( $entry['id'] ) ? (string) $entry['id'] : '';
+	public function handle_process( $fields, $entry, $form_data ): void {
+		if ( ! is_array( $fields ) || ! is_array( $form_data ) ) {
+			return;
+		}
+
+		$form_id = isset( $form_data['id'] ) ? (string) $form_data['id'] : '';
+		if ( '' === $form_id && is_array( $entry ) && isset( $entry['id'] ) ) {
+			$form_id = (string) $entry['id'];
+		}
 
 		$context = $this->extract(
 			array(
-				'fields'  => $fields,
-				'entry'   => $entry,
-				'form_id' => $form_id,
+				'fields'    => $fields,
+				'entry'     => is_array( $entry ) ? $entry : array(),
+				'form_data' => $form_data,
+				'form_id'   => $form_id,
 			)
 		);
 
@@ -101,7 +112,7 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 		$result = LD_FG_Engine::evaluate( $context );
 
 		if ( ! empty( $result['block'] ) ) {
-			$this->apply_block( $entry, (string) $result['action'] );
+			$this->apply_block( $form_data, (string) $result['action'] );
 		}
 	}
 
@@ -114,26 +125,42 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 		}
 
 		$form_id = (string) ( $source['form_id'] ?? '' );
-		$entry   = isset( $source['entry'] ) && is_array( $source['entry'] ) ? $source['entry'] : array();
 		$fields  = isset( $source['fields'] ) && is_array( $source['fields'] ) ? $source['fields'] : array();
 
 		$flat = array();
 
 		foreach ( $fields as $field ) {
-			if ( is_array( $field ) && isset( $field['value'] ) ) {
-				$flat[] = is_array( $field['value'] ) ? implode( ', ', $field['value'] ) : (string) $field['value'];
+			if ( is_array( $field ) && array_key_exists( 'value', $field ) ) {
+				$value = $field['value'];
+				if ( is_array( $value ) ) {
+					$flat[] = implode( ', ', array_map( 'strval', $value ) );
+				} elseif ( '' !== (string) $value ) {
+					$flat[] = (string) $value;
+				}
+				continue;
+			}
+
+			// Raw process_before-style values (field_id => scalar).
+			if ( is_scalar( $field ) && '' !== (string) $field ) {
+				$flat[] = (string) $field;
 			}
 		}
 
-		$title = $form_id ? get_the_title( (int) $form_id ) : '';
+		$title = '';
+		if ( ! empty( $source['form_data']['settings']['form_title'] ) ) {
+			$title = (string) $source['form_data']['settings']['form_title'];
+		} elseif ( $form_id ) {
+			$post_title = get_the_title( (int) $form_id );
+			$title      = is_string( $post_title ) ? $post_title : '';
+		}
 
 		return array(
 			'integration' => $this->get_slug(),
 			'form_id'     => $form_id,
-			'form_title'  => is_string( $title ) ? $title : '',
+			'form_title'  => $title,
 			'fields'      => $flat,
-			'honeypot'    => isset( $_POST['ld_fg_hp'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ) : '',
-			'render_time' => isset( $_POST['ld_fg_rt'] ) ? absint( $_POST['ld_fg_rt'] ) : 0,
+			'honeypot'    => isset( $_POST['ld_fg_hp'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing -- form submit path.
+			'render_time' => isset( $_POST['ld_fg_rt'] ) ? absint( $_POST['ld_fg_rt'] ) : 0, // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			'submit_time' => time(),
 			'ip'          => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '',
 			'email'       => $this->find_email( $fields ),
@@ -144,20 +171,28 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 	 * @inheritDoc
 	 */
 	public function apply_block( $source, string $action ): void {
-		if ( 'soft_fail' === $action ) {
-			wpforms()->process->errors[ (int) ( $source['id'] ?? 0 ) ]['header'] = __( 'Something went wrong. Please try again later.', 'lancedesk-form-guard' );
+		$form_id = 0;
+		if ( is_array( $source ) ) {
+			$form_id = (int) ( $source['id'] ?? 0 );
 		}
 
-		// silent_discard and quarantine stop processing by setting a generic error when soft_fail; otherwise unset success.
-		if ( 'soft_fail' !== $action && isset( wpforms()->process ) ) {
-			wpforms()->process->errors[ (int) ( $source['id'] ?? 0 ) ]['header'] = ' ';
+		if ( $form_id <= 0 || ! function_exists( 'wpforms' ) || ! isset( wpforms()->process ) ) {
+			return;
 		}
+
+		if ( 'soft_fail' === $action ) {
+			wpforms()->process->errors[ $form_id ]['header'] = __( 'Something went wrong. Please try again later.', 'lancedesk-form-guard' );
+			return;
+		}
+
+		// silent_discard / quarantine: stop processing without a loud user-facing message.
+		wpforms()->process->errors[ $form_id ]['header'] = ' ';
 	}
 
 	/**
 	 * Find email field value.
 	 *
-	 * @param array<int, mixed> $fields WPForms fields.
+	 * @param array<int|string, mixed> $fields WPForms fields.
 	 *
 	 * @return string
 	 */
