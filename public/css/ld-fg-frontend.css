@@ -1,0 +1,22 @@
+/**
+ * Visually hide honeypot traps without using display:none
+ * (many bots skip display:none / type=hidden text clones).
+ */
+.ld-fg-traps {
+	position: relative;
+}
+
+.ld-fg-hp {
+	position: absolute !important;
+	left: -10000px !important;
+	top: auto !important;
+	width: 1px !important;
+	height: 1px !important;
+	overflow: hidden !important;
+	opacity: 0 !important;
+	pointer-events: none;
+}
+
+.ld-fg-hp input {
+	opacity: 0;
+}

@@ -52,6 +52,9 @@ final class LD_FG_Plugin {
 			require_once LD_FG_PLUGIN_DIR . 'admin/class-ld-fg-admin.php';
 			new LD_FG_Admin();
 		}
+
+		require_once LD_FG_PLUGIN_DIR . 'public/class-ld-fg-public.php';
+		new LD_FG_Frontend();
 	}
 
 	/**
