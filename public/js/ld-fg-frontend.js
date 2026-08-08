@@ -105,7 +105,13 @@
 
 		// WPForms
 		document.querySelectorAll('form.wpforms-form').forEach(function (form) {
-			var id = form.getAttribute('data-formid') || form.querySelector('input[name="wpforms[id]"]')?.value;
+			var id = form.getAttribute('data-formid') || '';
+			if (!id) {
+				var idInput = form.querySelector('input[name="wpforms[id]"]');
+				if (idInput) {
+					id = idInput.value;
+				}
+			}
 			if (id) {
 				ensureTraps(form, 'wpforms', id);
 			}
@@ -196,27 +202,43 @@
 			return;
 		}
 		window.jQuery.ajaxPrefilter(function (options) {
-			if (!options || !options.data) {
-				return;
-			}
-			var dataStr = typeof options.data === 'string' ? options.data : '';
-			var isNinja = dataStr.indexOf('nf_ajax_submit') !== -1 || dataStr.indexOf('ninja_forms') !== -1;
-			var isWpforms = dataStr.indexOf('wpforms') !== -1 && dataStr.indexOf('wpforms[id]') !== -1;
-
-			if (!isNinja && !isWpforms && typeof options.data === 'object') {
+			if (!options) {
 				return;
 			}
 
-			var traps = { hp: '', rt: String(now()) };
-			if (isNinja) {
-				var formMatch = dataStr.match(/formData%5Bid%5D=(\d+)|"id"\s*:\s*"?(\d+)/);
-				var nid = formMatch ? (formMatch[1] || formMatch[2]) : '';
-				if (nid && isProtected('ninja', nid)) {
-					var cont = document.getElementById('nf-form-' + nid + '-cont');
-					traps = readTrapsNear(cont || document);
-					if (typeof options.data === 'string') {
-						options.data = appendToParamString(options.data, traps);
-					}
+			var dataStr = '';
+			if (typeof options.data === 'string') {
+				dataStr = options.data;
+			} else if (options.data && typeof options.data === 'object' && typeof window.jQuery.param === 'function') {
+				try {
+					dataStr = window.jQuery.param(options.data);
+				} catch (e) {
+					dataStr = '';
+				}
+			}
+
+			var isNinja = dataStr.indexOf('nf_ajax_submit') !== -1 || (typeof options.url === 'string' && options.url.indexOf('admin-ajax.php') !== -1 && dataStr.indexOf('ninja') !== -1);
+			if (!isNinja) {
+				return;
+			}
+
+			var formMatch = dataStr.match(/formData%5Bid%5D=(\d+)/) || dataStr.match(/formData\[id\]=(\d+)/) || dataStr.match(/"id"\s*:\s*"?(\d+)/);
+			var nid = formMatch ? formMatch[1] : '';
+			if (!nid || !isProtected('ninja', nid)) {
+				return;
+			}
+
+			var cont = document.getElementById('nf-form-' + nid + '-cont');
+			var traps = readTrapsNear(cont || document);
+
+			if (typeof options.data === 'string') {
+				options.data = appendToParamString(options.data, traps);
+			} else if (options.data && typeof options.data === 'object') {
+				if (cfg.honeypot && typeof options.data.ld_fg_hp === 'undefined') {
+					options.data.ld_fg_hp = traps.hp;
+				}
+				if (cfg.tooFast && typeof options.data.ld_fg_rt === 'undefined') {
+					options.data.ld_fg_rt = traps.rt || String(now());
 				}
 			}
 		});

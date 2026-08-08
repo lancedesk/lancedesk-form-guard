@@ -73,8 +73,10 @@ final class LD_FG_Frontend {
 		// Gravity Forms.
 		add_filter( 'gform_get_form_filter', array( $this, 'inject_gravity' ), 20, 2 );
 
-		// Quform.
+		// Quform — several hook names across versions.
 		add_filter( 'quform_form', array( $this, 'inject_quform' ), 20, 2 );
+		add_filter( 'quform_get_form_html', array( $this, 'inject_quform_html' ), 20, 2 );
+		add_action( 'quform_after_start_tag', array( $this, 'inject_quform_action' ), 10, 1 );
 
 		// Ninja Forms — markup after open tag when available; JS covers AJAX payload.
 		add_action( 'ninja_forms_display_after_open_form_tag', array( $this, 'inject_ninja' ), 10, 1 );
@@ -262,6 +264,39 @@ final class LD_FG_Frontend {
 		}
 
 		return $form . $fields;
+	}
+
+	/**
+	 * Quform HTML string filter (alternate hook name).
+	 *
+	 * @param string $html    Form HTML.
+	 * @param mixed  $form    Form object.
+	 *
+	 * @return string
+	 */
+	public function inject_quform_html( $html, $form = null ) {
+		$result = $this->inject_quform( is_string( $html ) ? $html : '', $form );
+		return is_string( $result ) ? $result : (string) $html;
+	}
+
+	/**
+	 * Quform action after opening form tag.
+	 *
+	 * @param mixed $form Form object.
+	 *
+	 * @return void
+	 */
+	public function inject_quform_action( $form ): void {
+		$form_id = '';
+		if ( is_object( $form ) && method_exists( $form, 'getId' ) ) {
+			$form_id = (string) $form->getId();
+		}
+		if ( '' === $form_id || ! LD_FG_Settings::is_form_protected( 'quform', $form_id ) ) {
+			return;
+		}
+		$this->maybe_enqueue_assets();
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->fields_html( 'quform', $form_id );
 	}
 
 	/**
