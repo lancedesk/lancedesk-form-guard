@@ -58,7 +58,7 @@ final class LD_FG_Engine {
 			return self::finalize( $context, $verdict, $action, $settings );
 		}
 
-		if ( ! empty( $settings['ai_enabled'] ) ) {
+		if ( ! empty( $settings['ai_enabled'] ) && ! empty( $settings['privacy_ack'] ) ) {
 			$content = self::combine_fields( $payload['fields'] );
 			$ai      = LD_FG_AI_Router::classify( $content, $settings );
 

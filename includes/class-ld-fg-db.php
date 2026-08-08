@@ -133,7 +133,7 @@ final class LD_FG_DB {
 					'honeypot'     => 1,
 					'too_fast'     => 1,
 				),
-				'ai_enabled'            => 1,
+				'ai_enabled'            => 0,
 				'confidence_quarantine' => 0.7,
 				'confidence_block'      => 0.9,
 				'protected_forms'       => array(),

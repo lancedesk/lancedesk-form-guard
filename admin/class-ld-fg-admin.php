@@ -234,6 +234,11 @@ final class LD_FG_Admin {
 			$output['protect_all'] = $protect_all;
 		}
 
+		// Guidelines 7 & 9: no third-party submission data without explicit privacy acknowledgment.
+		if ( empty( $output['privacy_ack'] ) ) {
+			$output['ai_enabled'] = 0;
+		}
+
 		return LD_FG_Settings::encrypt_provider_keys( $output );
 	}
 

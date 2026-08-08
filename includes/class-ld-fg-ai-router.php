@@ -41,7 +41,7 @@ final class LD_FG_AI_Router {
 			'provider'   => '',
 		);
 
-		if ( empty( $settings['ai_enabled'] ) || '' === trim( $content ) ) {
+		if ( empty( $settings['ai_enabled'] ) || empty( $settings['privacy_ack'] ) || '' === trim( $content ) ) {
 			return $fail;
 		}
 

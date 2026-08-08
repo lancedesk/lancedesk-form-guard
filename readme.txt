@@ -38,29 +38,36 @@ You can configure fail-open (allow submission when heuristics pass) or fail-clos
 
 = Is submission data sent to third parties? =
 
-When AI analysis is enabled, form field text may be sent to your configured AI provider for spam classification. See **External services** below.
+When Layer 2 AI analysis is enabled **and** you have acknowledged the privacy notice **and** configured a provider with an API key, truncated form field text may be sent to that provider for spam classification. Heuristics-only protection stays on your site. See **External services** below.
+
+= Does this plugin use the WordPress AI Client? =
+
+Not in this release. Form Guard uses site-owner API keys with a multi-provider fallback (Groq, OpenAI, Anthropic) so spam classification works on WordPress 6.4+ without requiring core AI Client setup. We may evaluate WordPress AI Client integration in a future release.
 
 == External services ==
 
-This plugin optionally connects to third-party AI APIs to classify form submissions for spam.
+This plugin optionally connects to third-party AI APIs to classify form submissions for spam. No submission text is sent until AI analysis is enabled, the privacy acknowledgment is checked in Settings, and at least one provider is enabled with an API key.
 
 **Groq** — https://groq.com/
-* Data sent: Truncated form submission text for spam classification.
-* When: Layer 2 AI analysis is enabled and heuristics pass or submission is ambiguous.
-* Terms: https://groq.com/terms/
-* Privacy: https://groq.com/privacy-policy/
+* Used for: Optional Layer 2 spam classification of form submissions.
+* Data sent: Truncated form submission text (not stored passwords or payment data collected by this plugin).
+* When: AI analysis is enabled, privacy is acknowledged, heuristics pass or the submission is ambiguous, and Groq is selected/enabled with a valid API key.
+* Terms of Service: https://groq.com/terms-of-use/
+* Privacy Policy: https://groq.com/privacy-policy/
 
 **OpenAI** — https://openai.com/
-* Data sent: Truncated form submission text for spam classification.
-* When: Layer 2 AI analysis is enabled and Groq is unavailable or lower priority.
-* Terms: https://openai.com/policies/terms-of-use
-* Privacy: https://openai.com/policies/privacy-policy
+* Used for: Optional Layer 2 spam classification of form submissions.
+* Data sent: Truncated form submission text.
+* When: AI analysis is enabled, privacy is acknowledged, and OpenAI is reached in the provider fallback order with a valid API key.
+* Terms of Service: https://openai.com/policies/terms-of-use/
+* Privacy Policy: https://openai.com/policies/privacy-policy/
 
 **Anthropic** — https://www.anthropic.com/
-* Data sent: Truncated form submission text for spam classification.
-* When: Layer 2 AI analysis is enabled and higher-priority providers are unavailable.
-* Terms: https://www.anthropic.com/legal/consumer-terms
-* Privacy: https://www.anthropic.com/legal/privacy
+* Used for: Optional Layer 2 spam classification of form submissions.
+* Data sent: Truncated form submission text.
+* When: AI analysis is enabled, privacy is acknowledged, and Anthropic is reached in the provider fallback order with a valid API key.
+* Terms of Service: https://www.anthropic.com/legal/consumer-terms
+* Privacy Policy: https://www.anthropic.com/legal/privacy
 
 == Changelog ==
 
