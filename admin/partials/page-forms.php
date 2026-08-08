@@ -55,7 +55,7 @@ endif;
 <div class="flex items-center gap-3 w-full md:w-auto">
 <div class="relative flex-1 md:w-64">
 <span class="ld-fg-icon material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none" aria-hidden="true">search</span>
-<input class="ld-fg-forms-search w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm pl-10 pr-3 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]" placeholder="<?php esc_attr_e( 'Search forms...', 'lancedesk-form-guard' ); ?>" type="text"/>
+<input class="ld-fg-forms-search w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm !pl-12 pr-3 py-1.5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]" placeholder="<?php esc_attr_e( 'Search forms...', 'lancedesk-form-guard' ); ?>" type="text"/>
 </div>
 </div>
 </div>

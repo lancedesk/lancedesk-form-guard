@@ -21,7 +21,7 @@ $total = count( $logs );
 <label class="block font-label-md text-label-md text-on-surface-variant mb-unit"><?php esc_html_e( 'Search', 'lancedesk-form-guard' ); ?></label>
 <div class="relative">
 <span class="ld-fg-icon material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-[20px]">search</span>
-<input class="ld-fg-logs-search w-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface pl-10 pr-3 py-2 rounded-lg border-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none transition-shadow placeholder:text-outline-variant" placeholder="<?php esc_attr_e( 'Search IP, Email, Form...', 'lancedesk-form-guard' ); ?>" type="text"/>
+<input class="ld-fg-logs-search w-full bg-surface-container-lowest font-body-sm text-body-sm text-on-surface !pl-12 pr-3 py-2 rounded-lg border-none ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none transition-shadow placeholder:text-outline-variant" placeholder="<?php esc_attr_e( 'Search IP, Email, Form...', 'lancedesk-form-guard' ); ?>" type="text"/>
 </div>
 </div>
 </div>

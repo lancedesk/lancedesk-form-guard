@@ -139,6 +139,12 @@
   background-image: none !important;
 }
 
+/* WP admin input padding overrides Tailwind — force room for leading icon */
+.ld-fg-admin-wrap .ld-fg-forms-search,
+.ld-fg-admin-wrap .ld-fg-logs-search {
+  padding-left: 3rem !important;
+}
+
 .ld-fg-admin-avatar {
   width: 28px !important;
   height: 28px !important;
