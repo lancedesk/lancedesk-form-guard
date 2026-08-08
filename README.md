@@ -2,8 +2,7 @@
 
 WordPress plugin that protects contact form submissions with local heuristics and optional AI classification **before** notification emails are sent.
 
-**Status:** Admin UI implemented from Stitch templates · core engine + adapters scaffolded · ready for local testing / Plugin Check.
-
+**Repository:** https://github.com/lancedesk/lancedesk-form-guard  
 **Current version:** 0.1.0
 
 ## Features
@@ -14,8 +13,20 @@ WordPress plugin that protects contact form submissions with local heuristics an
 - **Layer 1** local heuristics (honeypot, fast-submit, link/BBCode stuffing)
 - **Layer 2** optional AI (BYO keys: Groq, OpenAI, Anthropic) with fallback
 - Actions: silent discard, soft fail, or quarantine
-- Stats dashboard, logs drawer, CSV-ready log table, retention controls
+- Stats dashboard, security logs, retention controls
 - Encrypted API keys; hashed IPs; truncated message snippets
+
+## Requirements
+
+- WordPress 6.4+
+- PHP 8.0+
+
+## Installation
+
+1. Upload the `lancedesk-form-guard` folder to `/wp-content/plugins/`
+2. Activate **LanceDesk Form Guard**
+3. Open **Form Guard** in wp-admin and complete setup
+4. Protect forms and optionally connect an AI provider
 
 ## Naming
 
@@ -25,35 +36,17 @@ WordPress plugin that protects contact form submissions with local heuristics an
 | Slug / text domain | `lancedesk-form-guard` |
 | Prefix | `ld_fg_` / `LD_FG_` |
 | License | GPL-2.0-or-later |
-| Requires | WordPress 6.4+, PHP 8.0+ |
 
-## Admin UI
+## Development (CSS)
 
-Screens match Stitch HTML under [`html_templates/`](html_templates/). Compiled CSS (no CDN):
+Admin UI CSS is built with Tailwind. After editing `admin/css/ld-fg-admin-src.css`:
 
 ```bash
 npm install
 npm run build:css
 ```
 
-Fonts (Inter, Plus Jakarta Sans, Material Symbols Outlined) and Chart.js are **bundled locally** for Plugin Check compliance.
-
-## Docs
-
-| File | Purpose |
-|------|---------|
-| [`docs/prompt.txt`](docs/prompt.txt) | Original spam problem / idea |
-| [`docs/plan1.md`](docs/plan1.md) | Feasibility + Layer 1/2 architecture |
-| [`docs/plan2.md`](docs/plan2.md) | Locked product plan, schema, checklist |
-| [`docs/stitch-ui-prompt.md`](docs/stitch-ui-prompt.md) | Google Stitch prompts for wp-admin UI |
-
-## Release zip
-
-```bash
-bash zip-plugin.sh
-```
-
-Excludes `docs/`, `html_templates/`, `node_modules/`, and other dev paths (see `.distignore`).
+Fonts (Inter, Plus Jakarta Sans, Material Symbols Outlined) and Chart.js are **bundled locally** (no CDN).
 
 ## License
 

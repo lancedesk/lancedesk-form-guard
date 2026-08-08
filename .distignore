@@ -6,6 +6,7 @@
 /.git/
 /.gitignore
 /.editorconfig
+/.distignore
 /phpcs.xml.dist
 /phpunit.xml.dist
 /README.md
@@ -19,3 +20,5 @@
 /admin/css/ld-fg-admin-src.css
 /*.zip
 /zip-plugin.sh
+/*.md
+!/readme.txt
