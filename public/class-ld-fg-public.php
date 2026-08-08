@@ -76,6 +76,7 @@ final class LD_FG_Frontend {
 
 		// WPForms.
 		add_action( 'wpforms_frontend_output', array( $this, 'inject_wpforms' ), 10, 5 );
+		add_action( 'wpforms_display_submit_before', array( $this, 'inject_wpforms_submit' ), 10, 1 );
 
 		// Gravity Forms.
 		add_filter( 'gform_get_form_filter', array( $this, 'inject_gravity' ), 20, 2 );
@@ -325,7 +326,7 @@ final class LD_FG_Frontend {
 	}
 
 	/**
-	 * Build honeypot + render-time markup.
+	 * Build honeypot + render-time markup (once per form per request).
 	 *
 	 * @param string $integration Integration slug.
 	 * @param string $form_id     Form ID.
@@ -333,6 +334,12 @@ final class LD_FG_Frontend {
 	 * @return string
 	 */
 	public function fields_html( string $integration, string $form_id ): string {
+		$key = $integration . ':' . $form_id;
+		if ( isset( $this->printed[ $key ] ) ) {
+			return '';
+		}
+		$this->printed[ $key ] = true;
+
 		$settings   = LD_FG_Settings::get();
 		$heuristics = isset( $settings['heuristics'] ) && is_array( $settings['heuristics'] )
 			? $settings['heuristics']
@@ -357,5 +364,16 @@ final class LD_FG_Frontend {
 		$parts[] = '</div>';
 
 		return implode( '', $parts );
+	}
+
+	/**
+	 * WPForms alternate hook near submit button (inside form).
+	 *
+	 * @param array<string, mixed> $form_data Form data.
+	 *
+	 * @return void
+	 */
+	public function inject_wpforms_submit( $form_data ): void {
+		$this->inject_wpforms( is_array( $form_data ) ? $form_data : array() );
 	}
 }
