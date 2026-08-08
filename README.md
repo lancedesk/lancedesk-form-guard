@@ -2,21 +2,19 @@
 
 WordPress plugin that protects contact form submissions with local heuristics and optional AI classification **before** notification emails are sent.
 
-CAPTCHA stops scripted bots. It does not stop humans (or semi-automated tools) stuffing SEO backlinks into name and message fields. Form Guard hooks major form plugins, runs a free local Layer 1 check first, and only calls AI for ambiguous cases.
+**Status:** Admin UI implemented from Stitch templates · core engine + adapters scaffolded · ready for local testing / Plugin Check.
 
-**Status:** Early development — planning + Stitch admin UI → plugin implementation.
+**Current version:** 0.1.0
 
-**Current version:** 0.1.0 (planned)
+## Features
 
-## Features (planned)
-
-- Soft-detect installed form plugins (no hard dependency)
+- Soft-detect form plugins (no hard dependency)
 - Adapters: WPForms, Contact Form 7, Gravity Forms, Quform
 - Per-form enable toggles
-- **Layer 1** local heuristics (honeypot, fast-submit, link/BBCode stuffing, etc.)
+- **Layer 1** local heuristics (honeypot, fast-submit, link/BBCode stuffing)
 - **Layer 2** optional AI (BYO keys: Groq, OpenAI, Anthropic) with fallback
 - Actions: silent discard, soft fail, or quarantine
-- Stats dashboard, logs, CSV export, retention controls
+- Stats dashboard, logs drawer, CSV-ready log table, retention controls
 - Encrypted API keys; hashed IPs; truncated message snippets
 
 ## Naming
@@ -29,6 +27,17 @@ CAPTCHA stops scripted bots. It does not stop humans (or semi-automated tools) s
 | License | GPL-2.0-or-later |
 | Requires | WordPress 6.4+, PHP 8.0+ |
 
+## Admin UI
+
+Screens match Stitch HTML under [`html_templates/`](html_templates/). Compiled CSS (no CDN):
+
+```bash
+npm install
+npm run build:css
+```
+
+Fonts (Inter, Plus Jakarta Sans, Material Symbols Outlined) and Chart.js are **bundled locally** for Plugin Check compliance.
+
 ## Docs
 
 | File | Purpose |
@@ -38,14 +47,13 @@ CAPTCHA stops scripted bots. It does not stop humans (or semi-automated tools) s
 | [`docs/plan2.md`](docs/plan2.md) | Locked product plan, schema, checklist |
 | [`docs/stitch-ui-prompt.md`](docs/stitch-ui-prompt.md) | Google Stitch prompts for wp-admin UI |
 
-Stitch HTML output can land in [`html_templates/`](html_templates/).
+## Release zip
 
-## Development
+```bash
+bash zip-plugin.sh
+```
 
-Follow LanceDesk WordPress standards in the sibling `wordpress-development` repo:
-
-- Plugin main-file template
-- Plugin creation checklist (Plugin Check / PHPCS / release zip)
+Excludes `docs/`, `html_templates/`, `node_modules/`, and other dev paths (see `.distignore`).
 
 ## License
 
