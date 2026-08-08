@@ -81,12 +81,26 @@ body.ld-fg-screen #wpcontent {
 body.ld-fg-screen #wpbody,
 body.ld-fg-screen #wpbody-content {
   overflow-x: hidden;
-  float: none;
-  padding-bottom: 0 !important;
+  float: none !important;
+  width: 100% !important;
+  padding: 0 !important;
   margin: 0 !important;
 }
 body.ld-fg-screen #wpfooter {
   display: none !important;
+}
+
+/* Help / Screen Options sit above our shell and leave a blank white band */
+body.ld-fg-screen #screen-meta,
+body.ld-fg-screen #screen-meta-links {
+  display: none !important;
+}
+
+body.ld-fg-screen #wpbody-content > .notice,
+body.ld-fg-screen #wpbody-content > .updated,
+body.ld-fg-screen #wpbody-content > .error,
+body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
+  margin: 10px 20px !important;
 }
 
 .ld-fg-admin-wrap {
