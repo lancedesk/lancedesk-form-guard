@@ -60,6 +60,28 @@ final class LD_FG_Logger {
 	}
 
 	/**
+	 * Whether any security log rows exist (used by setup checklist step 4).
+	 *
+	 * @return bool
+	 */
+	public static function has_any(): bool {
+		global $wpdb;
+
+		$table = LD_FG_DB::table_name( 'logs' );
+
+		if ( '' === $table ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$exists = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM %i LIMIT 1', $table )
+		);
+
+		return null !== $exists && '' !== $exists;
+	}
+
+	/**
 	 * Query recent log rows.
 	 *
 	 * @param int                  $limit  Max rows.
