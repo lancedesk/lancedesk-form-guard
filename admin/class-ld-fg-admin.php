@@ -130,12 +130,25 @@ final class LD_FG_Admin {
 
 		$output = LD_FG_Settings::get();
 
-		$output['enabled']             = ! empty( $input['enabled'] ) ? 1 : 0;
-		$output['retention_days']      = isset( $input['retention_days'] ) ? absint( $input['retention_days'] ) : 90;
-		$output['delete_on_uninstall'] = ! empty( $input['delete_on_uninstall'] ) ? 1 : 0;
-		$output['privacy_ack']         = ! empty( $input['privacy_ack'] ) ? 1 : 0;
-		$output['setup_dismissed']     = ! empty( $input['setup_dismissed'] ) ? 1 : 0;
-		$output['ai_enabled']          = ! empty( $input['ai_enabled'] ) ? 1 : 0;
+		// Partial AJAX saves only include some keys — never reset omitted fields to defaults.
+		if ( array_key_exists( 'enabled', $input ) ) {
+			$output['enabled'] = ! empty( $input['enabled'] ) ? 1 : 0;
+		}
+		if ( array_key_exists( 'retention_days', $input ) ) {
+			$output['retention_days'] = absint( $input['retention_days'] );
+		}
+		if ( array_key_exists( 'delete_on_uninstall', $input ) ) {
+			$output['delete_on_uninstall'] = ! empty( $input['delete_on_uninstall'] ) ? 1 : 0;
+		}
+		if ( array_key_exists( 'privacy_ack', $input ) ) {
+			$output['privacy_ack'] = ! empty( $input['privacy_ack'] ) ? 1 : 0;
+		}
+		if ( array_key_exists( 'setup_dismissed', $input ) ) {
+			$output['setup_dismissed'] = ! empty( $input['setup_dismissed'] ) ? 1 : 0;
+		}
+		if ( array_key_exists( 'ai_enabled', $input ) ) {
+			$output['ai_enabled'] = ! empty( $input['ai_enabled'] ) ? 1 : 0;
+		}
 
 		$allowed_actions = array( 'silent_discard', 'soft_fail', 'quarantine' );
 		if ( isset( $input['default_action'] ) && in_array( $input['default_action'], $allowed_actions, true ) ) {

@@ -21,6 +21,27 @@ foreach ( $chart_data as $day ) {
 	$max_chart = max( $max_chart, (int) $day['heuristic'] + (int) $day['ai'] );
 }
 
+// Setup wizard only until dismissed — or until all steps are complete (then persist dismiss).
+$plugin         = LD_FG_Plugin::instance();
+$has_adapter    = ! empty( $plugin->get_available_adapters() );
+$has_protected  = ! empty( $ld_fg_settings['protected_forms'] );
+$has_provider   = false;
+$has_test       = LD_FG_Logger::has_any();
+
+foreach ( array( 'groq', 'openai', 'anthropic' ) as $pid ) {
+	if ( ! empty( $ld_fg_settings['providers'][ $pid ]['api_key'] ) ) {
+		$has_provider = true;
+		break;
+	}
+}
+
+$setup_complete = $has_adapter && $has_provider && $has_protected && $has_test;
+
+if ( $setup_complete && empty( $ld_fg_settings['setup_dismissed'] ) ) {
+	LD_FG_Settings::update( array( 'setup_dismissed' => 1 ) );
+	$ld_fg_settings['setup_dismissed'] = 1;
+}
+
 $show_setup = empty( $ld_fg_settings['setup_dismissed'] );
 
 if ( $show_setup ) {
