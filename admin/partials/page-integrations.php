@@ -28,7 +28,6 @@ foreach ( $adapters as $slug => $meta ) {
 		continue;
 	}
 
-	$label = $adapter->get_label();
 	if ( $adapter->is_available() ) {
 		$installed[ $slug ] = array(
 			'adapter' => $adapter,
@@ -36,7 +35,7 @@ foreach ( $adapters as $slug => $meta ) {
 			'forms'   => $adapter->list_forms(),
 		);
 	} else {
-		$missing[] = $label;
+		$missing[] = $adapter->get_label();
 	}
 }
 ?>
@@ -56,21 +55,9 @@ foreach ( $adapters as $slug => $meta ) {
 <h2 class="font-headline-md text-headline-md text-on-surface m-0 mb-unit"><?php esc_html_e( 'No supported form plugins found', 'lancedesk-form-guard' ); ?></h2>
 <p class="font-body-sm text-body-sm text-on-surface-variant mb-margin-md"><?php esc_html_e( 'Install and activate one of these plugins, then return here to connect it.', 'lancedesk-form-guard' ); ?></p>
 <ul class="font-body-sm text-body-sm text-on-surface list-disc pl-5 space-y-1 m-0">
-<?php foreach ( array_merge( array_map( static function ( $row ) {
-	return $row['adapter']->get_label();
-}, $installed ), $missing ) as $name ) : ?>
+<?php foreach ( $missing as $name ) : ?>
 <li><?php echo esc_html( $name ); ?></li>
 <?php endforeach; ?>
-<?php
-// When none are installed, $missing holds every supported label.
-if ( empty( $missing ) ) :
-	foreach ( array( 'WPForms', 'Contact Form 7', 'Gravity Forms', 'Quform', 'Ninja Forms' ) as $fallback ) :
-		?>
-<li><?php echo esc_html( $fallback ); ?></li>
-		<?php
-	endforeach;
-endif;
-?>
 </ul>
 </div>
 </div>
