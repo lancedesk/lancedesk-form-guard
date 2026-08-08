@@ -19,18 +19,15 @@ $ai_fail_mode   = (string) ( $ld_fg_settings['ai_fail_mode'] ?? 'fail_open' );
 $ai_enabled     = ! empty( $ld_fg_settings['ai_enabled'] );
 $block_pct      = (int) round( (float) ( $ld_fg_settings['confidence_block'] ?? 0.9 ) * 100 );
 ?>
-<div class="flex flex-col w-full max-w-5xl mx-auto space-y-6 pb-12 ld-fg-protection-page">
-<div class="flex items-center justify-between pb-6 border-b border-outline-variant/30">
-<div>
-<h1 class="font-hero-title text-hero-title text-on-surface mb-1"><?php esc_html_e( 'Protection Rules', 'lancedesk-form-guard' ); ?></h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl"><?php esc_html_e( 'Configure multi-layered defense mechanisms. Establish default actions for detected threats and tune the sensitivity of behavioral and AI-driven analysis.', 'lancedesk-form-guard' ); ?></p>
-</div>
+<div class="flex flex-col w-full ld-fg-protection-page">
+<div class="flex justify-between items-center gap-4 mb-6">
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Protection Rules', 'lancedesk-form-guard' ); ?></h1>
 <button type="button" class="ld-fg-save-protection bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md px-6 py-3 rounded-lg flex items-center gap-2 transition-colors shadow-sm whitespace-nowrap">
 <span class="ld-fg-icon material-symbols-outlined text-[18px]">save</span>
 <?php esc_html_e( 'Save Changes', 'lancedesk-form-guard' ); ?>
 </button>
 </div>
-<form id="ld-fg-protection-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+<form id="ld-fg-protection-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 <div class="lg:col-span-5 space-y-6">
 <div class="bg-surface-container rounded-xl shadow-sm p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
 <div class="flex items-center gap-3 mb-6 relative">

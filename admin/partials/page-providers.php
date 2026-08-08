@@ -19,15 +19,15 @@ $providers = array(
 $order = isset( $ld_fg_settings['provider_order'] ) ? (array) $ld_fg_settings['provider_order'] : array( 'groq', 'openai', 'anthropic' );
 $priority = 1;
 ?>
-<div class="flex flex-col w-full h-full max-w-5xl mx-auto pb-12">
-<div class="mb-margin-lg px-container-padding lg:px-0">
-<h1 class="text-headline-lg font-headline-lg text-on-surface mb-unit"><?php esc_html_e( 'AI Providers', 'lancedesk-form-guard' ); ?></h1>
-<p class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-2">
+<div class="flex flex-col w-full">
+<div class="flex justify-between items-center mb-6">
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'AI Providers', 'lancedesk-form-guard' ); ?></h1>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-2 mb-6">
 <span class="ld-fg-icon material-symbols-outlined text-[16px]">lock</span>
 <?php esc_html_e( 'API keys are encrypted at rest using AES-256.', 'lancedesk-form-guard' ); ?>
 </p>
-</div>
-<div class="flex flex-col gap-margin-md px-container-padding lg:px-0" id="ld-fg-provider-list">
+<div class="flex flex-col gap-margin-md" id="ld-fg-provider-list">
 <?php foreach ( $order as $pid ) :
 	if ( empty( $providers[ $pid ] ) ) {
 		continue;

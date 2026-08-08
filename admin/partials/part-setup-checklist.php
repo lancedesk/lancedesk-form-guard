@@ -28,12 +28,12 @@ foreach ( array( 'groq', 'openai', 'anthropic' ) as $pid ) {
 $step2_active = $has_adapter && ! $has_provider;
 $step3_active = $has_adapter && $has_provider && ! $has_protected;
 ?>
-<div class="flex flex-col w-full max-w-4xl mx-auto">
-<div class="mb-margin-lg">
-<h1 class="font-headline-lg text-headline-lg text-on-surface"><?php esc_html_e( 'Welcome to Form Guard', 'lancedesk-form-guard' ); ?></h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant mt-unit"><?php esc_html_e( 'Let\'s get your forms protected against spam and malicious inputs.', 'lancedesk-form-guard' ); ?></p>
+<div class="flex flex-col w-full">
+<div class="flex justify-between items-center mb-6">
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Welcome to Form Guard', 'lancedesk-form-guard' ); ?></h1>
 </div>
-<div class="bg-surface-container-lowest rounded-xl shadow-sm p-margin-lg">
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-6"><?php esc_html_e( 'Let\'s get your forms protected against spam and malicious inputs.', 'lancedesk-form-guard' ); ?></p>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-margin-lg max-w-4xl">
 <div class="flex flex-col gap-margin-md">
 
 <?php // Step 1: form plugin. ?>

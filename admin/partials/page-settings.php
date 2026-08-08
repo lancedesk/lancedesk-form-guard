@@ -16,10 +16,9 @@ $retention         = (int) ( $ld_fg_settings['retention_days'] ?? 90 );
 $delete_uninstall  = ! empty( $ld_fg_settings['delete_on_uninstall'] );
 $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 ?>
-<div class="flex flex-col w-full h-full max-w-4xl mx-auto pb-margin-lg">
-<div class="mb-margin-lg">
-<h1 class="font-hero-title text-hero-title text-on-surface mb-unit"><?php esc_html_e( 'Settings', 'lancedesk-form-guard' ); ?></h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant"><?php esc_html_e( 'Manage global configuration, data retention, and privacy preferences for LanceDesk Form Guard.', 'lancedesk-form-guard' ); ?></p>
+<div class="flex flex-col w-full">
+<div class="flex justify-between items-center mb-6">
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Settings', 'lancedesk-form-guard' ); ?></h1>
 </div>
 <form class="space-y-margin-lg" id="ld-fg-settings-form">
 <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">

@@ -19,10 +19,10 @@ $adapters = array(
 );
 ?>
 <div class="flex flex-col w-full">
-<div class="mb-margin-lg">
-<h1 class="font-hero-title text-hero-title text-on-surface mb-margin-sm"><?php esc_html_e( 'Integrations', 'lancedesk-form-guard' ); ?></h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl"><?php esc_html_e( 'Form Guard hooks your installed form plugins before notification emails are sent.', 'lancedesk-form-guard' ); ?></p>
+<div class="flex justify-between items-center mb-6">
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Integrations', 'lancedesk-form-guard' ); ?></h1>
 </div>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-6"><?php esc_html_e( 'Form Guard hooks your installed form plugins before notification emails are sent.', 'lancedesk-form-guard' ); ?></p>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
 <?php foreach ( $adapters as $slug => $meta ) : ?>
 <?php

@@ -13,8 +13,8 @@ $logs  = LD_FG_Logger::query_recent( 25 );
 $total = count( $logs );
 ?>
 <div class="flex flex-col w-full ld-fg-logs-page">
-<div class="flex items-center justify-between mb-margin-lg">
-<h1 class="font-hero-title text-hero-title text-on-surface"><?php esc_html_e( 'Security Logs', 'lancedesk-form-guard' ); ?></h1>
+<div class="flex items-center justify-between mb-6">
+<h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Security Logs', 'lancedesk-form-guard' ); ?></h1>
 </div>
 <div class="bg-surface-container rounded-xl shadow-sm mb-margin-lg p-margin-md flex flex-wrap items-end gap-margin-md">
 <div class="flex-1 min-w-[200px]">
