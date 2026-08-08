@@ -1,0 +1,37 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Dependencies / build
+/vendor/
+/node_modules/
+composer.lock
+package-lock.json
+yarn.lock
+.phpunit.result.cache
+.phpcs-cache
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Release artifacts
+*.zip
+dist/
+build/
+
+# Logs
+*.log
+
+# PHPUnit / coverage
+/coverage/
+/tests/coverage/
