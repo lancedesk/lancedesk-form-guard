@@ -60,9 +60,9 @@ if ( ! $available ) {
 ?>
 </p>
 <?php if ( $available && $form_count > 0 ) : ?>
-<a class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-primary-fixed-variant transition-colors w-full inline-block text-center" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-forms' ) ); ?>"><?php esc_html_e( 'Manage forms', 'lancedesk-form-guard' ); ?></a>
+<a class="ld-fg-btn-primary font-label-md text-label-md px-4 py-2 rounded-lg w-full inline-block text-center" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-forms' ) ); ?>"><?php esc_html_e( 'Manage forms', 'lancedesk-form-guard' ); ?></a>
 <?php elseif ( $available ) : ?>
-<a class="bg-transparent text-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-variant transition-colors w-full inline-block text-center" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-forms' ) ); ?>"><?php esc_html_e( 'Activate Integration', 'lancedesk-form-guard' ); ?></a>
+<a class="ld-fg-btn-ghost font-label-md text-label-md px-4 py-2 rounded-lg w-full inline-block text-center" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-forms' ) ); ?>"><?php esc_html_e( 'Activate Integration', 'lancedesk-form-guard' ); ?></a>
 <?php else : ?>
 <button type="button" class="bg-transparent text-outline font-label-md text-label-md px-4 py-2 rounded-lg cursor-not-allowed w-full" disabled><?php esc_html_e( 'Unavailable', 'lancedesk-form-guard' ); ?></button>
 <?php endif; ?>

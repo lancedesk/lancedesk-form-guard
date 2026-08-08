@@ -266,6 +266,48 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
   margin: 0;
 }
 
+/*
+ * Primary / ghost CTA links — WP admin a:hover / a:visited paint purple
+ * and beat Tailwind utility colors. Lock states here.
+ */
+.ld-fg-admin-wrap a.ld-fg-btn-primary,
+.ld-fg-admin-wrap a.ld-fg-btn-primary:link,
+.ld-fg-admin-wrap a.ld-fg-btn-primary:visited {
+  background-color: #005891 !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  border: 0;
+  box-shadow: none;
+  transition: background-color 0.15s ease;
+}
+.ld-fg-admin-wrap a.ld-fg-btn-primary:hover,
+.ld-fg-admin-wrap a.ld-fg-btn-primary:focus,
+.ld-fg-admin-wrap a.ld-fg-btn-primary:focus-visible,
+.ld-fg-admin-wrap a.ld-fg-btn-primary:active {
+  background-color: #00497a !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+.ld-fg-admin-wrap a.ld-fg-btn-ghost,
+.ld-fg-admin-wrap a.ld-fg-btn-ghost:link,
+.ld-fg-admin-wrap a.ld-fg-btn-ghost:visited {
+  background-color: transparent !important;
+  color: #005891 !important;
+  text-decoration: none !important;
+  border: 0;
+  box-shadow: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ld-fg-admin-wrap a.ld-fg-btn-ghost:hover,
+.ld-fg-admin-wrap a.ld-fg-btn-ghost:focus,
+.ld-fg-admin-wrap a.ld-fg-btn-ghost:focus-visible,
+.ld-fg-admin-wrap a.ld-fg-btn-ghost:active {
+  background-color: #dde3e8 !important;
+  color: #00497a !important;
+  text-decoration: none !important;
+}
+
 /* Kill WP admin native select arrow when we draw our own chevron */
 .ld-fg-admin-wrap select.ld-fg-select,
 .ld-fg-admin-wrap select.appearance-none {
