@@ -15,8 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$user           = wp_get_current_user();
-$display_name   = $user->display_name ? $user->display_name : $user->user_login;
 $active_classes = 'bg-primary-container text-on-primary-container border-l-4 border-l-primary';
 $nav_base       = 'flex items-center px-4 py-2 text-[14px] text-[#f0f0f1] hover:bg-primary-container/20 hover:text-on-primary-container transition-colors';
 
@@ -60,23 +58,10 @@ $nav_base       = 'flex items-center px-4 py-2 text-[14px] text-[#f0f0f1] hover:
 
 	<div class="ld-fg-admin-main flex-1 min-w-0 flex flex-col">
 		<header class="ld-fg-admin-header h-10 bg-[#1d2327] flex items-center justify-between px-margin-md flex-shrink-0">
-			<div class="flex items-center gap-margin-md">
-				<span class="text-[13px] text-white font-medium"><?php esc_html_e( 'LanceDesk Form Guard', 'lancedesk-form-guard' ); ?></span>
-				<button type="button" class="ld-fg-refresh bg-transparent border-0 p-0 cursor-pointer leading-none" aria-label="<?php esc_attr_e( 'Refresh', 'lancedesk-form-guard' ); ?>" onclick="window.location.reload();">
-					<span class="ld-fg-icon material-symbols-outlined text-[#a7aaad] text-[18px]" aria-hidden="true">refresh</span>
-				</button>
-			</div>
-			<div class="flex items-center gap-margin-md">
-				<span class="text-[13px] text-white">
-					<?php
-					/* translators: %s: user display name. */
-					echo esc_html( sprintf( __( 'Howdy, %s', 'lancedesk-form-guard' ), $display_name ) );
-					?>
-				</span>
-				<div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center overflow-hidden">
-					<?php echo get_avatar( $user->ID, 28, '', '', array( 'class' => 'ld-fg-admin-avatar' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_avatar returns safe HTML. ?>
-				</div>
-			</div>
+			<button type="button" class="ld-fg-refresh bg-transparent border-0 p-0 cursor-pointer leading-none" aria-label="<?php esc_attr_e( 'Refresh', 'lancedesk-form-guard' ); ?>" onclick="window.location.reload();">
+				<span class="ld-fg-icon material-symbols-outlined text-[#a7aaad] text-[18px]" aria-hidden="true">refresh</span>
+			</button>
+			<span class="text-[13px] text-white font-medium"><?php esc_html_e( 'LanceDesk Form Guard', 'lancedesk-form-guard' ); ?></span>
 		</header>
 
 		<main class="ld-fg-admin-content relative flex-1 px-container-padding py-container-padding">
