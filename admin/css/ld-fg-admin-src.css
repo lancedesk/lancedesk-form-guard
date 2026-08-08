@@ -68,6 +68,14 @@
   margin: 12px 20px 0;
 }
 
+/* Drop WP admin footer + its reserved padding so the shell can sit flush */
+#wpbody-content:has(.ld-fg-admin-wrap) {
+  padding-bottom: 0;
+}
+#wpcontent:has(.ld-fg-admin-wrap) #wpfooter {
+  display: none;
+}
+
 .ld-fg-admin-wrap {
   display: flex;
   align-items: stretch;
@@ -91,6 +99,7 @@
 .ld-fg-admin-main {
   flex: 1;
   min-width: 0;
+  min-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
 }
@@ -103,11 +112,12 @@
 }
 
 .ld-fg-admin-content {
-  flex: 1;
+  flex: 1 1 auto;
 }
 
 .ld-fg-admin-footer {
   flex-shrink: 0;
+  margin-top: auto;
   padding: 16px 24px;
   border-top: 1px solid #c3c4c7;
   background: #fff;

@@ -210,8 +210,8 @@ Use a shortened version of the `prompt.txt` spam (BBCode link farm + Cyrillic ke
 Full-width panel on Dashboard or dedicated welcome:
 
 1. Install/activate a form plugin (status)  
-2. Protect at least one form  
-3. (Optional) Add an AI provider for ambiguous cases  
+2. Add an AI provider (recommended before enabling forms)  
+3. Protect at least one form  
 4. Send a test submission  
 
 Checklist with checkmarks; primary CTA on the first incomplete step.
