@@ -49,13 +49,6 @@ if ( '' !== $ld_fg_notices ) {
 	</aside>
 
 	<div class="ld-fg-admin-main">
-		<header class="ld-fg-admin-header">
-			<button type="button" class="ld-fg-refresh" aria-label="<?php esc_attr_e( 'Refresh', 'lancedesk-form-guard' ); ?>" onclick="window.location.reload();">
-				<span class="ld-fg-icon material-symbols-outlined" aria-hidden="true">refresh</span>
-			</button>
-			<span class="ld-fg-admin-header__title"><?php esc_html_e( 'LanceDesk Form Guard', 'lancedesk-form-guard' ); ?></span>
-		</header>
-
 		<main class="ld-fg-admin-content">
 			<?php require $ld_fg_partial; ?>
 		</main>

@@ -233,39 +233,6 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
   background: #f0f0f1;
 }
 
-.ld-fg-admin-header {
-  position: sticky;
-  top: 32px;
-  z-index: 20;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 2.5rem;
-  padding: 0 1rem;
-  background: #1d2327;
-  box-sizing: border-box;
-}
-
-.ld-fg-admin-header__title {
-  font-size: 13px;
-  font-weight: 500;
-  color: #fff;
-}
-
-.ld-fg-refresh {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  line-height: 1;
-  color: #a7aaad;
-}
-
-.ld-fg-refresh .ld-fg-icon {
-  font-size: 18px;
-}
-
 .ld-fg-admin-content {
   flex: 1 1 auto;
   padding: 20px;
