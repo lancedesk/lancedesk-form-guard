@@ -106,4 +106,5 @@ endif;
 </div>
 </div>
 
+<?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

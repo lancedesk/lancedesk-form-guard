@@ -103,4 +103,5 @@ echo esc_html( sprintf( __( 'Showing %1$d to %2$d of %3$d entries', 'lancedesk-f
 <?php require LD_FG_PLUGIN_DIR . 'admin/partials/part-log-drawer.php'; ?>
 </div>
 
+<?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

@@ -155,4 +155,5 @@ foreach ( $rules as $key => $labels ) :
 </form>
 </div>
 
+<?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

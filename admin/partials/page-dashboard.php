@@ -192,4 +192,5 @@ foreach ( $top_reasons as $reason_row ) :
 </div>
 </div>
 
+<?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

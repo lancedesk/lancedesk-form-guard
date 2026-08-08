@@ -117,4 +117,5 @@ echo esc_html(
 <?php endif; ?>
 </div>
 
+<?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

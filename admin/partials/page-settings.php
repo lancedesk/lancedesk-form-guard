@@ -102,4 +102,5 @@ $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 </form>
 </div>
 
+<?php
 // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
