@@ -118,7 +118,8 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
 
 .ld-fg-admin-sidebar {
   position: sticky;
-  top: 32px;
+  /* Content already sits below #wpadminbar — top: 32px double-counted and left a gap */
+  top: 0;
   align-self: flex-start;
   height: calc(100vh - 32px);
   width: 12rem;
