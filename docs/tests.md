@@ -1,4 +1,4 @@
-promo@cheap-meds.biz):
+promo@cheap-meds.biz
 
 Subject / name: Best SEO Ranking 2026!!!
 
