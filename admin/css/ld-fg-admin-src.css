@@ -75,15 +75,17 @@
   min-height: calc(100vh - 32px);
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #161c20;
+  background: #f0f0f1;
 }
 
 .ld-fg-admin-sidebar {
   position: sticky;
   top: 32px;
-  align-self: flex-start;
   height: calc(100vh - 32px);
   width: 12rem;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .ld-fg-admin-main {
@@ -97,6 +99,25 @@
   position: sticky;
   top: 32px;
   z-index: 20;
+  flex-shrink: 0;
+}
+
+.ld-fg-admin-content {
+  flex: 1;
+}
+
+.ld-fg-admin-footer {
+  flex-shrink: 0;
+  padding: 16px 24px;
+  border-top: 1px solid #c3c4c7;
+  background: #fff;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #646970;
+}
+
+.ld-fg-admin-footer p {
+  margin: 0;
 }
 
 .ld-fg-admin-avatar {

@@ -67,6 +67,15 @@ $nav_base       = 'flex items-center px-4 py-2 text-[14px] text-[#f0f0f1] hover:
 		<main class="ld-fg-admin-content relative flex-1 px-container-padding py-container-padding">
 			<?php require $ld_fg_partial; ?>
 		</main>
+
+		<footer class="ld-fg-admin-footer">
+			<p>
+				<?php
+				/* translators: %s: plugin version number. */
+				echo esc_html( sprintf( __( 'LanceDesk Form Guard v%s', 'lancedesk-form-guard' ), LD_FG_VERSION ) );
+				?>
+			</p>
+		</footer>
 	</div>
 </div>
 <?php
