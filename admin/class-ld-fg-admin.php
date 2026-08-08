@@ -349,23 +349,35 @@ final class LD_FG_Admin {
 
 		$integration = isset( $_POST['integration'] ) ? sanitize_key( wp_unslash( (string) $_POST['integration'] ) ) : '';
 		$form_id     = isset( $_POST['form_id'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['form_id'] ) ) : '';
-		// Prefer is_protected — some hosts strip the reserved-looking "protected" POST key.
-		$raw_flag = null;
-		if ( isset( $_POST['is_protected'] ) ) {
-			$raw_flag = wp_unslash( (string) $_POST['is_protected'] );
-		} elseif ( isset( $_POST['protected'] ) ) {
-			$raw_flag = wp_unslash( (string) $_POST['protected'] );
+
+		$raw_flag = '';
+		foreach ( array( 'protect', 'is_protected', 'protected' ) as $flag_key ) {
+			if ( isset( $_POST[ $flag_key ] ) ) {
+				$raw_flag = strtolower( trim( (string) wp_unslash( $_POST[ $flag_key ] ) ) );
+				break;
+			}
 		}
-		$is_protected = null !== $raw_flag && in_array( $raw_flag, array( '1', 'true', 'yes', 'on' ), true );
+
+		$is_protected = in_array( $raw_flag, array( '1', 'true', 'yes', 'on' ), true );
 
 		if ( '' === $integration || '' === $form_id ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid form.', 'lancedesk-form-guard' ) ), 400 );
+			wp_send_json_error(
+				array(
+					'message' => __( 'Invalid form.', 'lancedesk-form-guard' ),
+					'debug'   => array(
+						'integration' => $integration,
+						'form_id'     => $form_id,
+						'raw_flag'    => $raw_flag,
+					),
+				),
+				400
+			);
 		}
 
-		$settings = LD_FG_Settings::get();
-		$key      = $integration . ':' . $form_id;
-		$list     = isset( $settings['protected_forms'] ) && is_array( $settings['protected_forms'] )
-			? array_values( array_map( 'strval', $settings['protected_forms'] ) )
+		$key  = $integration . ':' . $form_id;
+		$opt  = get_option( LD_FG_Settings::OPTION_KEY, array() );
+		$list = ( is_array( $opt ) && isset( $opt['protected_forms'] ) && is_array( $opt['protected_forms'] ) )
+			? array_values( array_map( 'strval', $opt['protected_forms'] ) )
 			: array();
 
 		if ( $is_protected ) {
@@ -383,21 +395,17 @@ final class LD_FG_Admin {
 			);
 		}
 
-		$saved = LD_FG_Settings::update( array( 'protected_forms' => $list ) );
+		$ok = LD_FG_Settings::set_protected_forms( $list );
 
-		// update_option returns false when the value is unchanged — still a success for toggles.
-		$stored = LD_FG_Settings::get();
-		$ok     = in_array( $key, (array) ( $stored['protected_forms'] ?? array() ), true ) === $is_protected;
-
-		if ( ! $ok && ! $saved ) {
+		if ( ! $ok ) {
 			wp_send_json_error( array( 'message' => __( 'Could not save protection state.', 'lancedesk-form-guard' ) ), 500 );
 		}
 
 		wp_send_json_success(
 			array(
-				'protected'       => $is_protected,
+				'protect'         => $is_protected ? 1 : 0,
 				'key'             => $key,
-				'protected_forms' => $stored['protected_forms'] ?? array(),
+				'protected_forms' => $list,
 			)
 		);
 	}

@@ -13,36 +13,48 @@
 		body.append('action', action);
 		body.append('nonce', ldFgAdmin.nonce);
 		Object.keys(data || {}).forEach(function (key) {
-			body.append(key, data[key]);
+			body.append(key, data[key] == null ? '' : String(data[key]));
 		});
+		// Do not append "; charset=UTF-8" — some PHP/SAPI setups then leave $_POST empty.
 		return fetch(ldFgAdmin.ajaxUrl, {
 			method: 'POST',
 			credentials: 'same-origin',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: body.toString()
-		}).then(function (r) { return r.json(); });
+		}).then(function (r) {
+			return r.text().then(function (text) {
+				try {
+					return JSON.parse(text);
+				} catch (err) {
+					throw new Error('Bad AJAX response: ' + String(text).slice(0, 180));
+				}
+			});
+		});
 	}
 
 	// Toggle form protection — save immediately via AJAX.
 	document.querySelectorAll('.ld-fg-toggle-form').forEach(function (input) {
 		input.addEventListener('change', function () {
-			var wanted = input.checked;
-			input.disabled = true;
+			if (input.getAttribute('data-busy') === '1') {
+				return;
+			}
+			var wanted = !!input.checked;
+			input.setAttribute('data-busy', '1');
 			post('ld_fg_toggle_form', {
 				integration: input.getAttribute('data-integration') || '',
 				form_id: input.getAttribute('data-form-id') || '',
-				is_protected: wanted ? '1' : '0'
+				protect: wanted ? '1' : '0'
 			}).then(function (payload) {
-				input.disabled = false;
+				input.removeAttribute('data-busy');
 				if (!payload || !payload.success) {
 					input.checked = !wanted;
 					window.console && console.warn('Form Guard: toggle save failed', payload);
 					return;
 				}
-				var saved = !!(payload.data && payload.data.protected);
-				input.checked = saved;
+				// Keep the user's choice; server confirmed success.
+				input.checked = wanted;
 			}).catch(function (err) {
-				input.disabled = false;
+				input.removeAttribute('data-busy');
 				input.checked = !wanted;
 				window.console && console.warn('Form Guard: toggle request error', err);
 			});

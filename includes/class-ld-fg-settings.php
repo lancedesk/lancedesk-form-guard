@@ -103,6 +103,45 @@ final class LD_FG_Settings {
 	}
 
 	/**
+	 * Replace the protected_forms list in the stored option (no recursive merge).
+	 *
+	 * @param array<int, string> $list Form keys (`integration:id`).
+	 *
+	 * @return bool True when the stored list matches $list.
+	 */
+	public static function set_protected_forms( array $list ): bool {
+		$list = array_values(
+			array_unique(
+				array_map(
+					static function ( $item ): string {
+						return sanitize_text_field( (string) $item );
+					},
+					$list
+				)
+			)
+		);
+
+		$stored = get_option( self::OPTION_KEY, array() );
+		if ( ! is_array( $stored ) ) {
+			$stored = array();
+		}
+
+		$stored['protected_forms'] = $list;
+
+		update_option( self::OPTION_KEY, $stored, false );
+
+		$verify = get_option( self::OPTION_KEY, array() );
+		$got    = ( is_array( $verify ) && isset( $verify['protected_forms'] ) && is_array( $verify['protected_forms'] ) )
+			? array_values( array_map( 'strval', $verify['protected_forms'] ) )
+			: array();
+
+		sort( $list );
+		sort( $got );
+
+		return $list === $got;
+	}
+
+	/**
 	 * Update settings (partial merge).
 	 *
 	 * Indexed lists (e.g. protected_forms) are replaced wholesale — array_replace_recursive
@@ -113,20 +152,26 @@ final class LD_FG_Settings {
 	 * @return bool
 	 */
 	public static function update( array $patch ): bool {
+		if ( array_key_exists( 'protected_forms', $patch ) && is_array( $patch['protected_forms'] ) ) {
+			$ok = self::set_protected_forms( $patch['protected_forms'] );
+			unset( $patch['protected_forms'] );
+			if ( empty( $patch ) ) {
+				return $ok;
+			}
+		}
+
 		$current = self::get();
 
-		$list_keys = array( 'protected_forms', 'provider_order' );
-
-		foreach ( $list_keys as $key ) {
-			if ( array_key_exists( $key, $patch ) ) {
-				$current[ $key ] = is_array( $patch[ $key ] ) ? array_values( $patch[ $key ] ) : array();
-				unset( $patch[ $key ] );
-			}
+		if ( array_key_exists( 'provider_order', $patch ) ) {
+			$current['provider_order'] = is_array( $patch['provider_order'] )
+				? array_values( $patch['provider_order'] )
+				: array();
+			unset( $patch['provider_order'] );
 		}
 
 		$merged = empty( $patch ) ? $current : array_replace_recursive( $current, $patch );
 
-		return (bool) update_option( self::OPTION_KEY, $merged );
+		return (bool) update_option( self::OPTION_KEY, $merged, false );
 	}
 
 	/**
