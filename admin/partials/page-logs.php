@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $logs  = LD_FG_Logger::query_recent( 25 );
 $total = count( $logs );
 ?>
@@ -100,3 +102,5 @@ echo esc_html( sprintf( __( 'Showing %1$d to %2$d of %3$d entries', 'lancedesk-f
 </div>
 <?php require LD_FG_PLUGIN_DIR . 'admin/partials/part-log-drawer.php'; ?>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $heuristics = isset( $ld_fg_settings['heuristics'] ) && is_array( $ld_fg_settings['heuristics'] )
 	? $ld_fg_settings['heuristics']
 	: array();
@@ -152,3 +154,5 @@ foreach ( $rules as $key => $labels ) :
 </div>
 </form>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

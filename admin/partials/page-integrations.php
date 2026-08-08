@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $plugin   = LD_FG_Plugin::instance();
 $adapters = array(
 	'wpforms' => array( 'icon' => 'description' ),
@@ -114,3 +116,5 @@ echo esc_html(
 <?php endif; ?>
 <?php endif; ?>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

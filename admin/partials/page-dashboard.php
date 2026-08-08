@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $stats         = LD_FG_Logger::stats_7d( 7 );
 $top_reasons   = LD_FG_Logger::top_reasons( 7, 4 );
 $recent_logs   = LD_FG_Logger::query_recent( 4, array() );
@@ -189,3 +191,5 @@ foreach ( $top_reasons as $reason_row ) :
 <span><?php esc_html_e( 'IPs are stored as hashes. Message bodies are truncated for privacy.', 'lancedesk-form-guard' ); ?></span>
 </div>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

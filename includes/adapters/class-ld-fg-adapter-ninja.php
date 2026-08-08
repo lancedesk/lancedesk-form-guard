@@ -248,7 +248,9 @@ final class LD_FG_Adapter_Ninja implements LD_FG_Form_Adapter {
 			'form_id'     => $form_id,
 			'form_title'  => $title,
 			'fields'      => $flat,
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Intercept runs after Ninja Forms AJAX nonce validation.
 			'honeypot'    => isset( $_POST['ld_fg_hp'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ) : '',
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Intercept runs after Ninja Forms AJAX nonce validation.
 			'render_time' => isset( $_POST['ld_fg_rt'] ) ? absint( $_POST['ld_fg_rt'] ) : 0,
 			'submit_time' => time(),
 			'ip'          => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '',

@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $enabled           = ! empty( $ld_fg_settings['enabled'] );
 $retention         = (int) ( $ld_fg_settings['retention_days'] ?? 90 );
 $delete_uninstall  = ! empty( $ld_fg_settings['delete_on_uninstall'] );
@@ -99,3 +101,5 @@ $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 </div>
 </form>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $providers = array(
 	'groq'      => array( 'label' => 'Groq', 'letter' => 'G', 'models' => array( 'llama-3.1-8b-instant', 'llama3-70b-8192', 'mixtral-8x7b-32768' ) ),
 	'openai'    => array( 'label' => 'OpenAI', 'letter' => 'O', 'models' => array( 'gpt-4o-mini', 'gpt-4o' ) ),
@@ -101,3 +103,5 @@ endforeach;
 ?>
 </div>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

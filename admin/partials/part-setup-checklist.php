@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
+
 $plugin        = LD_FG_Plugin::instance();
 $has_adapter   = ! empty( $plugin->get_available_adapters() );
 $protected     = isset( $ld_fg_settings['protected_forms'] ) ? (array) $ld_fg_settings['protected_forms'] : array();
@@ -143,3 +145,5 @@ if ( $has_test ) {
 <?php endif; ?>
 </div>
 </div>
+
+// phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound

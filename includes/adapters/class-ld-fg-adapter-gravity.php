@@ -110,6 +110,7 @@ final class LD_FG_Adapter_Gravity implements LD_FG_Form_Adapter {
 		$form_id = isset( $form['id'] ) ? (string) $form['id'] : '';
 		$fields  = array();
 
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Intercept runs inside gform_validation after GF nonce checks.
 		if ( ! empty( $source['form']['fields'] ) && is_array( $source['form']['fields'] ) ) {
 			foreach ( $source['form']['fields'] as $field ) {
 				$input = 'input_' . ( is_object( $field ) ? $field->id : ( $field['id'] ?? '' ) );
@@ -119,7 +120,7 @@ final class LD_FG_Adapter_Gravity implements LD_FG_Form_Adapter {
 			}
 		}
 
-		return array(
+		$context = array(
 			'integration' => $this->get_slug(),
 			'form_id'     => $form_id,
 			'form_title'  => (string) ( $form['title'] ?? '' ),
@@ -130,6 +131,9 @@ final class LD_FG_Adapter_Gravity implements LD_FG_Form_Adapter {
 			'ip'          => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '',
 			'email'       => isset( $_POST['input_1'] ) ? sanitize_email( wp_unslash( (string) $_POST['input_1'] ) ) : '',
 		);
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+		return $context;
 	}
 
 	/**

@@ -119,13 +119,14 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 
 		$fields = array();
 
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Intercept runs after Quform has validated the submission.
 		foreach ( $_POST as $key => $value ) {
 			if ( 0 === strpos( (string) $key, 'quform_' ) && is_string( $value ) ) {
 				$fields[] = sanitize_text_field( wp_unslash( $value ) );
 			}
 		}
 
-		return array(
+		$context = array(
 			'integration' => $this->get_slug(),
 			'form_id'     => $id,
 			'form_title'  => $name,
@@ -136,6 +137,9 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 			'ip'          => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '',
 			'email'       => '',
 		);
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+		return $context;
 	}
 
 	/**

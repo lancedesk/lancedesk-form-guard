@@ -433,7 +433,7 @@ final class LD_FG_Admin {
 		$raw_flag = '';
 		foreach ( array( 'protect', 'is_protected', 'protected' ) as $flag_key ) {
 			if ( isset( $_POST[ $flag_key ] ) ) {
-				$raw_flag = strtolower( trim( (string) wp_unslash( $_POST[ $flag_key ] ) ) );
+				$raw_flag = strtolower( trim( sanitize_text_field( wp_unslash( (string) $_POST[ $flag_key ] ) ) ) );
 				break;
 			}
 		}
@@ -599,6 +599,8 @@ final class LD_FG_Admin {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'lancedesk-form-guard' ) ) );
 		}
 
+		// JSON object/string from admin UI; every value is sanitized in sanitize_settings().
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized via sanitize_settings() after json_decode.
 		$raw = isset( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : array();
 
 		if ( is_string( $raw ) ) {
