@@ -107,38 +107,46 @@ final class LD_FG_Settings {
 	 *
 	 * @param array<int, string> $list Form keys (`integration:id`).
 	 *
-	 * @return bool True when the stored list matches $list.
+	 * @return bool
 	 */
 	public static function set_protected_forms( array $list ): bool {
 		$list = array_values(
 			array_unique(
-				array_map(
-					static function ( $item ): string {
-						return sanitize_text_field( (string) $item );
-					},
-					$list
+				array_filter(
+					array_map(
+						static function ( $item ): string {
+							return sanitize_text_field( (string) $item );
+						},
+						$list
+					),
+					static function ( string $item ): bool {
+						return '' !== $item;
+					}
 				)
 			)
 		);
 
 		$stored = get_option( self::OPTION_KEY, array() );
-		if ( ! is_array( $stored ) ) {
-			$stored = array();
-		}
+		// Copy — mutating the cached get_option() array in place makes update_option() no-op.
+		$stored = is_array( $stored ) ? array_merge( array(), $stored ) : array();
 
 		$stored['protected_forms'] = $list;
 
-		update_option( self::OPTION_KEY, $stored, false );
+		$result = update_option( self::OPTION_KEY, $stored );
 
-		$verify = get_option( self::OPTION_KEY, array() );
-		$got    = ( is_array( $verify ) && isset( $verify['protected_forms'] ) && is_array( $verify['protected_forms'] ) )
-			? array_values( array_map( 'strval', $verify['protected_forms'] ) )
-			: array();
+		// false can mean "unchanged" after a successful prior write — treat matching value as OK.
+		if ( false === $result ) {
+			$existing = get_option( self::OPTION_KEY, array() );
+			$got      = ( is_array( $existing ) && isset( $existing['protected_forms'] ) && is_array( $existing['protected_forms'] ) )
+				? array_values( array_map( 'strval', $existing['protected_forms'] ) )
+				: array();
+			$expected = $list;
+			sort( $expected );
+			sort( $got );
+			return $expected === $got;
+		}
 
-		sort( $list );
-		sort( $got );
-
-		return $list === $got;
+		return true;
 	}
 
 	/**

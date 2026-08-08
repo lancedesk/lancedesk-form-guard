@@ -26,6 +26,7 @@ final class LD_FG_Admin {
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_filter( 'admin_body_class', array( $this, 'admin_body_class' ) );
 
 		add_action( 'wp_ajax_ld_fg_toggle_form', array( $this, 'ajax_toggle_form' ) );
 		add_action( 'wp_ajax_ld_fg_test_provider', array( $this, 'ajax_test_provider' ) );
@@ -33,6 +34,24 @@ final class LD_FG_Admin {
 		add_action( 'wp_ajax_ld_fg_discard_quarantine', array( $this, 'ajax_discard_quarantine' ) );
 		add_action( 'wp_ajax_ld_fg_dismiss_setup', array( $this, 'ajax_dismiss_setup' ) );
 		add_action( 'wp_ajax_ld_fg_save_settings', array( $this, 'ajax_save_settings' ) );
+	}
+
+	/**
+	 * Mark Form Guard admin screens for CSS that must apply before :has() paints.
+	 *
+	 * @param string $classes Body classes.
+	 *
+	 * @return string
+	 */
+	public function admin_body_class( string $classes ): string {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only page detection.
+		$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : '';
+
+		if ( '' !== $page && ( 'ld-fg' === $page || 0 === strpos( $page, 'ld-fg-' ) ) ) {
+			$classes .= ' ld-fg-screen';
+		}
+
+		return $classes;
 	}
 
 	/**
@@ -173,6 +192,35 @@ final class LD_FG_Admin {
 			);
 		}
 
+		// register_setting hooks this into sanitize_option_{$key}, so update_option()
+		// also runs through here — must preserve list fields or toggles never save.
+		if ( array_key_exists( 'protected_forms', $input ) && is_array( $input['protected_forms'] ) ) {
+			$output['protected_forms'] = array_values(
+				array_filter(
+					array_map(
+						static function ( $item ): string {
+							return sanitize_text_field( (string) $item );
+						},
+						$input['protected_forms']
+					),
+					static function ( string $item ): bool {
+						return '' !== $item;
+					}
+				)
+			);
+		}
+
+		if ( array_key_exists( 'protect_all', $input ) && is_array( $input['protect_all'] ) ) {
+			$protect_all = array();
+			foreach ( $input['protect_all'] as $slug => $on ) {
+				$slug = sanitize_key( (string) $slug );
+				if ( '' !== $slug ) {
+					$protect_all[ $slug ] = ! empty( $on ) ? 1 : 0;
+				}
+			}
+			$output['protect_all'] = $protect_all;
+		}
+
 		return LD_FG_Settings::encrypt_provider_keys( $output );
 	}
 
@@ -244,7 +292,7 @@ final class LD_FG_Admin {
 			);
 		}
 
-		$deps = $is_dashboard ? array( 'chart-js' ) : array();
+		$deps = $is_dashboard ? array( 'jquery', 'chart-js' ) : array( 'jquery' );
 
 		wp_enqueue_script(
 			'ld-fg-admin',
@@ -341,7 +389,9 @@ final class LD_FG_Admin {
 	 * @return void
 	 */
 	public function ajax_toggle_form(): void {
-		check_ajax_referer( 'ld_fg_admin', 'nonce' );
+		if ( ! check_ajax_referer( 'ld_fg_admin', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid security token. Refresh the page and try again.', 'lancedesk-form-guard' ) ), 403 );
+		}
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'lancedesk-form-guard' ) ), 403 );
@@ -358,17 +408,13 @@ final class LD_FG_Admin {
 			}
 		}
 
+		// Accept common truthy encodings from jQuery/fetch.
 		$is_protected = in_array( $raw_flag, array( '1', 'true', 'yes', 'on' ), true );
 
 		if ( '' === $integration || '' === $form_id ) {
 			wp_send_json_error(
 				array(
 					'message' => __( 'Invalid form.', 'lancedesk-form-guard' ),
-					'debug'   => array(
-						'integration' => $integration,
-						'form_id'     => $form_id,
-						'raw_flag'    => $raw_flag,
-					),
 				),
 				400
 			);
@@ -395,9 +441,7 @@ final class LD_FG_Admin {
 			);
 		}
 
-		$ok = LD_FG_Settings::set_protected_forms( $list );
-
-		if ( ! $ok ) {
+		if ( ! LD_FG_Settings::set_protected_forms( $list ) ) {
 			wp_send_json_error( array( 'message' => __( 'Could not save protection state.', 'lancedesk-form-guard' ) ), 500 );
 		}
 

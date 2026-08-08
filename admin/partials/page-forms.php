@@ -84,8 +84,8 @@ endif;
 <td class="p-3 border-b-surface-variant text-on-surface-variant"><?php echo esc_html( $form['label'] ); ?></td>
 <td class="p-3 border-b-surface-variant">
 <label class="relative inline-flex items-center cursor-pointer">
-<input type="checkbox" class="ld-fg-toggle-form sr-only peer" data-integration="<?php echo esc_attr( $form['integration'] ); ?>" data-form-id="<?php echo esc_attr( $form['id'] ); ?>" <?php checked( $form['protected'] ); ?> />
-<div class="w-9 h-5 bg-outline rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+<input type="checkbox" class="ld-fg-toggle-form sr-only peer" data-integration="<?php echo esc_attr( $form['integration'] ); ?>" data-form-id="<?php echo esc_attr( (string) $form['id'] ); ?>" <?php checked( $form['protected'] ); ?> />
+<div class="relative w-9 h-5 bg-outline rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
 </label>
 </td>
 </tr>

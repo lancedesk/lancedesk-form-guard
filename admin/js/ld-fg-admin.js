@@ -1,63 +1,69 @@
 /**
  * LanceDesk Form Guard — admin scripts.
  */
-(function () {
+(function ($) {
 	'use strict';
 
-	if (typeof window.ldFgAdmin === 'undefined') {
+	if (typeof window.ldFgAdmin === 'undefined' || typeof $ === 'undefined') {
 		return;
 	}
 
 	function post(action, data) {
-		var body = new URLSearchParams();
-		body.append('action', action);
-		body.append('nonce', ldFgAdmin.nonce);
-		Object.keys(data || {}).forEach(function (key) {
-			body.append(key, data[key] == null ? '' : String(data[key]));
-		});
-		// Do not append "; charset=UTF-8" — some PHP/SAPI setups then leave $_POST empty.
-		return fetch(ldFgAdmin.ajaxUrl, {
+		var payload = $.extend({ action: action, nonce: ldFgAdmin.nonce }, data || {});
+		return $.ajax({
+			url: ldFgAdmin.ajaxUrl,
 			method: 'POST',
-			credentials: 'same-origin',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: body.toString()
-		}).then(function (r) {
-			return r.text().then(function (text) {
-				try {
-					return JSON.parse(text);
-				} catch (err) {
-					throw new Error('Bad AJAX response: ' + String(text).slice(0, 180));
-				}
-			});
+			dataType: 'json',
+			data: payload
 		});
 	}
 
-	// Toggle form protection — save immediately via AJAX.
-	document.querySelectorAll('.ld-fg-toggle-form').forEach(function (input) {
-		input.addEventListener('change', function () {
-			if (input.getAttribute('data-busy') === '1') {
+	function toggleMessage(text, isError) {
+		var $bar = $('#ld-fg-forms-toast');
+		if (!$bar.length) {
+			$bar = $('<div id="ld-fg-forms-toast" class="notice" style="margin:12px 0;"></div>');
+			$('.ld-fg-admin-content').prepend($bar);
+		}
+		$bar
+			.toggleClass('notice-error', !!isError)
+			.toggleClass('notice-success', !isError)
+			.html('<p>' + text + '</p>')
+			.show();
+		window.setTimeout(function () { $bar.fadeOut(200); }, 3200);
+	}
+
+	// Toggle form protection — save immediately via admin-ajax.
+	$(document).on('change', '.ld-fg-toggle-form', function () {
+		var $input = $(this);
+		if ($input.data('busy')) {
+			return;
+		}
+		var wanted = $input.prop('checked');
+		$input.data('busy', true);
+
+		post('ld_fg_toggle_form', {
+			integration: $input.attr('data-integration') || '',
+			form_id: $input.attr('data-form-id') || '',
+			protect: wanted ? '1' : '0'
+		}).done(function (payload) {
+			$input.data('busy', false);
+			if (!payload || !payload.success) {
+				$input.prop('checked', !wanted);
+				toggleMessage(
+					(payload && payload.data && payload.data.message) ? payload.data.message : 'Could not save form protection.',
+					true
+				);
 				return;
 			}
-			var wanted = !!input.checked;
-			input.setAttribute('data-busy', '1');
-			post('ld_fg_toggle_form', {
-				integration: input.getAttribute('data-integration') || '',
-				form_id: input.getAttribute('data-form-id') || '',
-				protect: wanted ? '1' : '0'
-			}).then(function (payload) {
-				input.removeAttribute('data-busy');
-				if (!payload || !payload.success) {
-					input.checked = !wanted;
-					window.console && console.warn('Form Guard: toggle save failed', payload);
-					return;
-				}
-				// Keep the user's choice; server confirmed success.
-				input.checked = wanted;
-			}).catch(function (err) {
-				input.removeAttribute('data-busy');
-				input.checked = !wanted;
-				window.console && console.warn('Form Guard: toggle request error', err);
-			});
+			$input.prop('checked', wanted);
+		}).fail(function (xhr) {
+			$input.data('busy', false);
+			$input.prop('checked', !wanted);
+			var msg = 'Could not save form protection.';
+			if (xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+				msg = xhr.responseJSON.data.message;
+			}
+			toggleMessage(msg, true);
 		});
 	});
 
@@ -285,4 +291,4 @@
 			}
 		});
 	}
-})();
+})(jQuery);

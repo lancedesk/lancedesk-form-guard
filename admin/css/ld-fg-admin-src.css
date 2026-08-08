@@ -61,26 +61,44 @@
 
 /* Fit inside wp-admin (WP menu + admin bar remain) */
 .ld-fg-wrap {
-  margin: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   max-width: none;
+}
+.ld-fg-wrap:not(:has(.notice, .updated, .error, .notice-success, .notice-error, .notice-warning)) {
+  display: none;
 }
 .ld-fg-wrap .notice {
   margin: 12px 20px 0;
 }
 
-/* Drop WP admin footer + its reserved padding so the shell can sit flush */
-#wpbody-content:has(.ld-fg-admin-wrap) {
-  padding-bottom: 0;
+/*
+ * Body class is present on first paint (unlike :has), so no footer/scrollbar flash.
+ * Zero #wpcontent padding instead of negative margins on the shell.
+ */
+body.ld-fg-screen #wpcontent {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  overflow-x: hidden;
 }
-#wpcontent:has(.ld-fg-admin-wrap) #wpfooter {
-  display: none;
+body.ld-fg-screen #wpbody,
+body.ld-fg-screen #wpbody-content {
+  overflow-x: hidden;
+  float: none;
+  padding-bottom: 0 !important;
+}
+body.ld-fg-screen #wpfooter {
+  display: none !important;
 }
 
 .ld-fg-admin-wrap {
   display: flex;
   align-items: stretch;
-  margin: 0 0 0 -20px;
+  margin: 0;
   min-height: calc(100vh - 32px);
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #161c20;
   background: #f0f0f1;
@@ -212,7 +230,7 @@
 
 @media screen and (max-width: 782px) {
   .ld-fg-admin-wrap {
-    margin-left: -10px;
+    margin: 0;
     flex-direction: column;
   }
   .ld-fg-admin-sidebar {
