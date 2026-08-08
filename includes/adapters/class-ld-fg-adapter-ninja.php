@@ -137,7 +137,13 @@ final class LD_FG_Adapter_Ninja implements LD_FG_Form_Adapter {
 			$this->pending_blocks[ $form_id ] = $action;
 		}
 
-		return $this->with_block_errors( $form_data, $action );
+		// Soft fail: surface a generic error. Silent discard / quarantine: no errors —
+		// keep success actions, strip mail in filter_submission_actions().
+		if ( 'soft_fail' === $action ) {
+			return $this->with_block_errors( $form_data, $action );
+		}
+
+		return $form_data;
 	}
 
 	/**
@@ -158,12 +164,15 @@ final class LD_FG_Adapter_Ninja implements LD_FG_Form_Adapter {
 		$action = $this->pending_blocks[ $form_id ];
 		unset( $this->pending_blocks[ $form_id ] );
 
-		// Soft fail already halted via field errors; still drop mail for safety.
+		// Always drop outbound email. Soft fail already halted via field errors.
+		// Silent discard keeps successmessage/redirect so AJAX finishes like a real send.
 		$strip_types = array( 'email', 'emailadmin', 'emailuser' );
 
-		if ( 'soft_fail' !== $action ) {
-			// Silent discard / quarantine: no mail, no public success toast if possible.
+		if ( 'soft_fail' === $action ) {
 			$strip_types = array_merge( $strip_types, array( 'successmessage', 'redirect', 'save' ) );
+		} else {
+			// Silent / quarantine: no mail, no DB save of spam — still show thank-you.
+			$strip_types = array_merge( $strip_types, array( 'save' ) );
 		}
 
 		$filtered = array();
@@ -257,7 +266,7 @@ final class LD_FG_Adapter_Ninja implements LD_FG_Form_Adapter {
 	}
 
 	/**
-	 * Attach field errors so Ninja Forms halts action processing.
+	 * Attach field errors so Ninja Forms halts action processing (soft fail only).
 	 *
 	 * @param array<string, mixed> $form_data Submission payload.
 	 * @param string               $action    Engine action.
@@ -281,9 +290,6 @@ final class LD_FG_Adapter_Ninja implements LD_FG_Form_Adapter {
 
 		if ( 'soft_fail' === $action ) {
 			$form_data['errors']['fields'][ $field_id ] = __( 'Something went wrong. Please try again later.', 'lancedesk-form-guard' );
-		} else {
-			// Halt processing without a loud user-facing message (silent discard / quarantine).
-			$form_data['errors']['fields'][ $field_id ] = ' ';
 		}
 
 		return $form_data;

@@ -17,6 +17,13 @@ require_once LD_FG_PLUGIN_DIR . 'includes/adapters/interface-ld-fg-form-adapter.
 final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 
 	/**
+	 * Form IDs that should complete successfully but never send notification emails.
+	 *
+	 * @var array<int, true>
+	 */
+	private array $silent_form_ids = array();
+
+	/**
 	 * @inheritDoc
 	 */
 	public function get_slug(): string {
@@ -75,6 +82,8 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 		// After field validation/formatting — $fields have value keys; errors stop entry + notifications.
 		// Docs: https://wpforms.com/developers/wpforms_process/
 		add_action( 'wpforms_process', array( $this, 'handle_process' ), 5, 3 );
+		add_filter( 'wpforms_entry_email', array( $this, 'maybe_skip_all_emails' ), 10, 4 );
+		add_filter( 'wpforms_entry_email_process', array( $this, 'maybe_skip_email_process' ), 10, 4 );
 	}
 
 	/**
@@ -111,9 +120,65 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 
 		$result = LD_FG_Engine::evaluate( $context );
 
-		if ( ! empty( $result['block'] ) ) {
-			$this->apply_block( $form_data, (string) $result['action'] );
+		if ( empty( $result['block'] ) ) {
+			return;
 		}
+
+		$action = (string) $result['action'];
+
+		if ( 'soft_fail' === $action ) {
+			$this->apply_block( $form_data, $action );
+			return;
+		}
+
+		// Silent discard / quarantine: let confirmation UI complete; block notification emails.
+		if ( $form_id !== '' ) {
+			$this->silent_form_ids[ (int) $form_id ] = true;
+		}
+	}
+
+	/**
+	 * Skip all WPForms notification emails for silently discarded submissions.
+	 *
+	 * @param bool                     $send      Whether to send.
+	 * @param array<int|string, mixed> $fields    Fields.
+	 * @param array<string, mixed>     $entry     Entry.
+	 * @param array<string, mixed>     $form_data Form data.
+	 *
+	 * @return bool
+	 */
+	public function maybe_skip_all_emails( $send, $fields, $entry, $form_data ): bool { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+		return $this->should_send_wpforms_email( (bool) $send, $form_data );
+	}
+
+	/**
+	 * Skip a single WPForms notification for silently discarded submissions.
+	 *
+	 * @param bool                     $process         Whether to process.
+	 * @param array<int|string, mixed> $fields          Fields.
+	 * @param array<string, mixed>     $form_data       Form data.
+	 * @param int|string               $notification_id Notification ID.
+	 *
+	 * @return bool
+	 */
+	public function maybe_skip_email_process( $process, $fields, $form_data, $notification_id ): bool { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+		return $this->should_send_wpforms_email( (bool) $process, $form_data );
+	}
+
+	/**
+	 * @param bool                     $default   Default send flag.
+	 * @param array<string, mixed>|mixed $form_data Form data.
+	 *
+	 * @return bool
+	 */
+	private function should_send_wpforms_email( bool $default, $form_data ): bool {
+		$form_id = is_array( $form_data ) ? (int) ( $form_data['id'] ?? 0 ) : 0;
+
+		if ( $form_id > 0 && isset( $this->silent_form_ids[ $form_id ] ) ) {
+			return false;
+		}
+
+		return $default;
 	}
 
 	/**
@@ -140,7 +205,6 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 				continue;
 			}
 
-			// Raw process_before-style values (field_id => scalar).
 			if ( is_scalar( $field ) && '' !== (string) $field ) {
 				$flat[] = (string) $field;
 			}
@@ -159,7 +223,7 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 			'form_id'     => $form_id,
 			'form_title'  => $title,
 			'fields'      => $flat,
-			'honeypot'    => isset( $_POST['ld_fg_hp'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing -- form submit path.
+			'honeypot'    => isset( $_POST['ld_fg_hp'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			'render_time' => isset( $_POST['ld_fg_rt'] ) ? absint( $_POST['ld_fg_rt'] ) : 0, // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			'submit_time' => time(),
 			'ip'          => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '',
@@ -182,11 +246,7 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 
 		if ( 'soft_fail' === $action ) {
 			wpforms()->process->errors[ $form_id ]['header'] = __( 'Something went wrong. Please try again later.', 'lancedesk-form-guard' );
-			return;
 		}
-
-		// silent_discard / quarantine: stop processing without a loud user-facing message.
-		wpforms()->process->errors[ $form_id ]['header'] = ' ';
 	}
 
 	/**
