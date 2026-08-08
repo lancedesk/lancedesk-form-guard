@@ -35,10 +35,10 @@ $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 <label class="font-headline-lg text-[18px] leading-tight text-on-surface cursor-pointer select-none" for="ld-fg-master-toggle"><?php esc_html_e( 'Enable Form Guard Protection', 'lancedesk-form-guard' ); ?></label>
 <p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'Master switch to activate or deactivate spam and abuse protection across all connected forms.', 'lancedesk-form-guard' ); ?></p>
 </div>
-<div class="relative flex items-center h-6 mt-1">
+<label class="relative inline-flex items-center h-6 mt-1 cursor-pointer" for="ld-fg-master-toggle">
 <input class="sr-only peer" id="ld-fg-master-toggle" name="enabled" type="checkbox" value="1" <?php checked( $enabled ); ?> />
-<div class="w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-</div>
+<div class="relative w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary pointer-events-none" aria-hidden="true"></div>
+</label>
 </div>
 <div class="space-y-unit">
 <label class="block font-label-md text-label-md text-on-surface" for="ld-fg-log-retention"><?php esc_html_e( 'Log Retention Period', 'lancedesk-form-guard' ); ?></label>
