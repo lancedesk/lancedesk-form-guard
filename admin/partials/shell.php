@@ -34,9 +34,10 @@ $nav_base       = 'flex items-center px-4 py-2 text-[14px] text-[#f0f0f1] hover:
 				<?php
 				$is_active = ( $key === $ld_fg_page_key );
 				$url       = admin_url( 'admin.php?page=' . $item['slug'] );
-				$classes   = $is_active
-					? 'flex items-center justify-between px-4 py-2 transition-colors group ' . $active_classes
-					: ( 'dashboard' === $key ? $nav_base . ' justify-between group' : $nav_base );
+				$classes = $nav_base . ( $is_active ? ' ' . $active_classes : '' );
+				if ( 'dashboard' === $key ) {
+					$classes .= ' justify-between group';
+				}
 				?>
 				<a class="<?php echo esc_attr( $classes ); ?>" href="<?php echo esc_url( $url ); ?>"<?php echo $is_active ? ' aria-current="page"' : ''; ?>>
 					<?php if ( 'dashboard' === $key ) : ?>
