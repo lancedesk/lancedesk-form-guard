@@ -15,57 +15,48 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$active_classes = 'bg-primary-container text-on-primary-container border-l-4 border-l-primary';
-$nav_base       = 'flex items-center px-4 py-2 text-[14px] text-[#f0f0f1] hover:bg-primary-container/20 hover:text-on-primary-container transition-colors';
-
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template variables.
+
+ob_start();
+settings_errors();
+$ld_fg_notices = trim( (string) ob_get_clean() );
+if ( '' !== $ld_fg_notices ) {
+	echo '<div class="wrap ld-fg-wrap">' . $ld_fg_notices . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- WP settings_errors HTML.
+}
 ?>
-<div class="wrap ld-fg-wrap">
-	<?php settings_errors(); ?>
-</div>
-<div class="ld-fg-admin-wrap bg-[#f0f0f1] font-body-lg text-on-surface">
-	<aside class="ld-fg-admin-sidebar w-48 bg-[#2c3338] flex flex-col flex-shrink-0" aria-label="<?php esc_attr_e( 'Form Guard navigation', 'lancedesk-form-guard' ); ?>">
-		<div class="px-4 h-12 flex items-center mb-2 bg-[#1d2327]">
-			<span class="ld-fg-icon material-symbols-outlined text-[#a7aaad] mr-2" aria-hidden="true">shield</span>
-			<span class="text-[14px] font-semibold text-white truncate"><?php esc_html_e( 'LanceDesk', 'lancedesk-form-guard' ); ?></span>
+<div class="ld-fg-admin-wrap">
+	<aside class="ld-fg-admin-sidebar" aria-label="<?php esc_attr_e( 'Form Guard navigation', 'lancedesk-form-guard' ); ?>">
+		<div class="ld-fg-admin-sidebar__brand">
+			<span class="ld-fg-icon material-symbols-outlined" aria-hidden="true">shield</span>
+			<span class="ld-fg-admin-sidebar__brand-text"><?php esc_html_e( 'LanceDesk', 'lancedesk-form-guard' ); ?></span>
 		</div>
-		<nav class="flex-1 space-y-0.5 overflow-y-auto">
+		<nav class="ld-fg-admin-sidebar__nav">
 			<?php foreach ( $ld_fg_nav_items as $key => $item ) : ?>
 				<?php
 				$is_active = ( $key === $ld_fg_page_key );
 				$url       = admin_url( 'admin.php?page=' . $item['slug'] );
-				$classes = $nav_base . ( $is_active ? ' ' . $active_classes : '' );
-				if ( 'dashboard' === $key ) {
-					$classes .= ' justify-between group';
-				}
+				$classes   = 'ld-fg-nav-link' . ( $is_active ? ' is-active' : '' );
 				?>
 				<a class="<?php echo esc_attr( $classes ); ?>" href="<?php echo esc_url( $url ); ?>"<?php echo $is_active ? ' aria-current="page"' : ''; ?>>
-					<?php if ( 'dashboard' === $key ) : ?>
-					<div class="flex items-center">
-						<span class="ld-fg-icon material-symbols-outlined mr-3 text-[20px]" aria-hidden="true"><?php echo esc_html( (string) $item['icon'] ); ?></span>
-						<?php echo esc_html( (string) $item['label'] ); ?>
-					</div>
-						<?php if ( $ld_fg_enabled ) : ?>
-					<span class="px-1.5 py-0.5 rounded-full bg-[#46b450] text-[10px] text-white font-bold leading-none"><?php esc_html_e( 'ON', 'lancedesk-form-guard' ); ?></span>
-						<?php endif; ?>
-					<?php else : ?>
-					<span class="ld-fg-icon material-symbols-outlined mr-3 text-[20px]" aria-hidden="true"><?php echo esc_html( (string) $item['icon'] ); ?></span>
-						<?php echo esc_html( (string) $item['label'] ); ?>
+					<span class="ld-fg-icon material-symbols-outlined" aria-hidden="true"><?php echo esc_html( (string) $item['icon'] ); ?></span>
+					<span class="ld-fg-nav-link__label"><?php echo esc_html( (string) $item['label'] ); ?></span>
+					<?php if ( 'dashboard' === $key && $ld_fg_enabled ) : ?>
+						<span class="ld-fg-nav-link__badge"><?php esc_html_e( 'ON', 'lancedesk-form-guard' ); ?></span>
 					<?php endif; ?>
 				</a>
 			<?php endforeach; ?>
 		</nav>
 	</aside>
 
-	<div class="ld-fg-admin-main flex-1 min-w-0 flex flex-col">
-		<header class="ld-fg-admin-header h-10 bg-[#1d2327] flex items-center justify-between px-margin-md flex-shrink-0">
-			<button type="button" class="ld-fg-refresh bg-transparent border-0 p-0 cursor-pointer leading-none" aria-label="<?php esc_attr_e( 'Refresh', 'lancedesk-form-guard' ); ?>" onclick="window.location.reload();">
-				<span class="ld-fg-icon material-symbols-outlined text-[#a7aaad] text-[18px]" aria-hidden="true">refresh</span>
+	<div class="ld-fg-admin-main">
+		<header class="ld-fg-admin-header">
+			<button type="button" class="ld-fg-refresh" aria-label="<?php esc_attr_e( 'Refresh', 'lancedesk-form-guard' ); ?>" onclick="window.location.reload();">
+				<span class="ld-fg-icon material-symbols-outlined" aria-hidden="true">refresh</span>
 			</button>
-			<span class="text-[13px] text-white font-medium"><?php esc_html_e( 'LanceDesk Form Guard', 'lancedesk-form-guard' ); ?></span>
+			<span class="ld-fg-admin-header__title"><?php esc_html_e( 'LanceDesk Form Guard', 'lancedesk-form-guard' ); ?></span>
 		</header>
 
-		<main class="ld-fg-admin-content relative flex-1 px-container-padding py-container-padding">
+		<main class="ld-fg-admin-content">
 			<?php require $ld_fg_partial; ?>
 		</main>
 
