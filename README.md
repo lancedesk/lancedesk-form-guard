@@ -3,7 +3,7 @@
 WordPress plugin that protects contact form submissions with local heuristics and optional AI classification **before** notification emails are sent.
 
 **Repository:** https://github.com/lancedesk/lancedesk-form-guard  
-**Current version:** 0.1.0
+**Current version:** 0.1.1
 
 ## Features
 

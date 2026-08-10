@@ -4,7 +4,7 @@ Tags: spam, forms, security, ai, antispam
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -70,6 +70,11 @@ This plugin optionally connects to third-party AI APIs to classify form submissi
 * Privacy Policy: https://www.anthropic.com/legal/privacy
 
 == Changelog ==
+
+= 0.1.1 =
+* Log detail drawer shows integration, layer, provider, action, confidence, reason, and captured fields.
+* AI outbound calls require privacy acknowledgment; AI analysis defaults off.
+* Improved external services documentation in the readme.
 
 = 0.1.0 =
 * Initial release.
