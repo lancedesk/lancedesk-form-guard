@@ -198,9 +198,24 @@ final class LD_FG_Adapter_WPForms implements LD_FG_Form_Adapter {
 			if ( is_array( $field ) && array_key_exists( 'value', $field ) ) {
 				$value = $field['value'];
 				if ( is_array( $value ) ) {
-					$flat[] = implode( ', ', array_map( 'strval', $value ) );
-				} elseif ( '' !== (string) $value ) {
-					$flat[] = (string) $value;
+					$value = implode( ', ', array_map( 'strval', $value ) );
+				}
+				$value = trim( (string) $value );
+				if ( '' === $value ) {
+					continue;
+				}
+
+				$label = '';
+				if ( ! empty( $field['name'] ) ) {
+					$label = sanitize_text_field( (string) $field['name'] );
+				} elseif ( ! empty( $field['id'] ) ) {
+					$label = 'Field ' . sanitize_text_field( (string) $field['id'] );
+				}
+
+				if ( '' !== $label ) {
+					$flat[ $label ] = $value;
+				} else {
+					$flat[] = $value;
 				}
 				continue;
 			}

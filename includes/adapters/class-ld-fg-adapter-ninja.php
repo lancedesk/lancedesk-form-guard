@@ -233,7 +233,18 @@ final class LD_FG_Adapter_Ninja implements LD_FG_Form_Adapter {
 				continue;
 			}
 
-			$flat[] = $value;
+			$label = '';
+			if ( ! empty( $field['label'] ) ) {
+				$label = sanitize_text_field( (string) $field['label'] );
+			} elseif ( ! empty( $field['key'] ) ) {
+				$label = sanitize_text_field( (string) $field['key'] );
+			}
+
+			if ( '' !== $label ) {
+				$flat[ $label ] = $value;
+			} else {
+				$flat[] = $value;
+			}
 
 			$type = strtolower( (string) ( $field['type'] ?? '' ) );
 			$key  = strtolower( (string) ( $field['key'] ?? '' ) );

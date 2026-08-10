@@ -151,7 +151,20 @@ final class LD_FG_Adapter_CF7 implements LD_FG_Form_Adapter {
 			: '';
 
 		$title = $form_id ? get_the_title( (int) $form_id ) : '';
-		$flat  = is_array( $data ) ? array_values( array_map( 'strval', $data ) ) : array();
+		$flat  = array();
+
+		if ( is_array( $data ) ) {
+			foreach ( $data as $key => $value ) {
+				if ( is_array( $value ) ) {
+					$value = implode( ', ', array_map( 'strval', $value ) );
+				}
+				$value = trim( (string) $value );
+				if ( '' === $value || 0 === strpos( (string) $key, '_' ) ) {
+					continue;
+				}
+				$flat[ sanitize_text_field( (string) $key ) ] = $value;
+			}
+		}
 
 		return array(
 			'integration' => $this->get_slug(),

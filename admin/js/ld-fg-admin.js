@@ -125,6 +125,7 @@
 	var drawer = document.getElementById('ld-fg-log-drawer');
 	var overlay = document.getElementById('ld-fg-drawer-overlay');
 	var activeLogId = 0;
+	var i18n = (typeof ldFgAdmin !== 'undefined' && ldFgAdmin.i18n) ? ldFgAdmin.i18n : {};
 
 	function closeDrawer() {
 		if (!drawer || !overlay) return;
@@ -136,20 +137,179 @@
 		}, 300);
 	}
 
+	function setText(el, value) {
+		if (!el) return;
+		el.textContent = value == null || value === '' ? '—' : String(value);
+	}
+
+	function highlightFlagged(text) {
+		var escaped = String(text)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;');
+		return escaped.replace(
+			/(\[url=[^\]]+\][^\[]*\[\/url\]|https?:\/\/[^\s<]+)/gi,
+			'<span class="bg-error-container/50 text-error">$1</span>'
+		);
+	}
+
+	function normalizeFields(fields, snippet) {
+		var out = [];
+		if (fields && typeof fields === 'object') {
+			if (Array.isArray(fields)) {
+				fields.forEach(function (value, index) {
+					if (value == null || String(value).trim() === '') return;
+					out.push({
+						label: (i18n.fieldLabel || 'Field') + ' ' + (index + 1),
+						value: String(value)
+					});
+				});
+			} else {
+				Object.keys(fields).forEach(function (key) {
+					var value = fields[key];
+					if (value == null || String(value).trim() === '') return;
+					out.push({
+						label: String(key),
+						value: Array.isArray(value) ? value.join(', ') : String(value)
+					});
+				});
+			}
+		}
+		if (!out.length && snippet) {
+			out.push({
+				label: i18n.capturedContent || 'Captured content',
+				value: String(snippet)
+			});
+		}
+		return out;
+	}
+
+	function renderCapturedFields(container, fields, snippet) {
+		if (!container) return;
+		container.innerHTML = '';
+		var items = normalizeFields(fields, snippet);
+		if (!items.length) {
+			container.innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">' +
+				(i18n.noCapturedFields || 'No captured fields for this entry.') + '</p>';
+			return;
+		}
+		var longest = 0;
+		items.forEach(function (item) {
+			if (item.value.length > longest) longest = item.value.length;
+		});
+		items.forEach(function (item) {
+			var isLong = item.value.length >= Math.max(80, longest * 0.6) || /\[url=|https?:\/\//i.test(item.value);
+			var card = document.createElement('div');
+			card.className = 'bg-surface-container-lowest border border-outline rounded p-3';
+			var header = document.createElement('div');
+			header.className = 'font-label-md text-label-md text-on-surface-variant mb-1 text-[11px] flex items-center justify-between gap-2';
+			var label = document.createElement('span');
+			label.textContent = (i18n.fieldPrefix || 'Field:') + ' ' + item.label;
+			header.appendChild(label);
+			if (isLong) {
+				var flag = document.createElement('span');
+				flag.className = 'text-error bg-error-container/30 px-1.5 rounded-sm';
+				flag.textContent = i18n.flaggedContent || 'Flagged Content';
+				header.appendChild(flag);
+			}
+			var body = document.createElement('div');
+			body.className = 'font-body-sm text-body-sm text-on-surface bg-surface-container px-2 py-2 rounded font-mono text-[12px] whitespace-pre-wrap break-words leading-relaxed' +
+				(isLong ? ' border-l-2 border-error' : '');
+			if (isLong) {
+				body.innerHTML = highlightFlagged(item.value);
+			} else {
+				body.textContent = item.value;
+			}
+			card.appendChild(header);
+			card.appendChild(body);
+			container.appendChild(card);
+		});
+	}
+
 	function openDrawer(row) {
-		if (!drawer || !overlay) return;
-		activeLogId = parseInt(row.getAttribute('data-log-id'), 10) || 0;
-		var cells = row.querySelectorAll('td');
+		if (!drawer || !overlay || !row) return;
+		var raw = row.getAttribute('data-log') || '{}';
+		var data;
+		try {
+			data = JSON.parse(raw);
+		} catch (err) {
+			data = {};
+		}
+
+		activeLogId = parseInt(data.id || row.getAttribute('data-log-id'), 10) || 0;
+
 		var formEl = document.getElementById('ld-fg-drawer-form');
-		var dateEl = document.getElementById('ld-fg-drawer-date');
+		var dateEl = document.getElementById('ld-fg-drawer-date-text');
+		var titleEl = document.getElementById('ld-fg-drawer-title');
 		var reasonEl = document.getElementById('ld-fg-drawer-reason');
-		var snippetEl = document.getElementById('ld-fg-drawer-snippet');
-		if (formEl && cells[1]) formEl.textContent = cells[1].innerText.trim();
-		if (dateEl && cells[0]) dateEl.lastChild.textContent = cells[0].innerText.trim();
-		if (reasonEl && cells[5]) reasonEl.textContent = cells[5].getAttribute('title') || cells[5].innerText.trim();
-		if (snippetEl && cells[5]) snippetEl.textContent = cells[5].innerText.trim();
+		var fieldsEl = document.getElementById('ld-fg-drawer-fields');
+		var integrationEl = document.querySelector('#ld-fg-drawer-integration [data-value]');
+		var layerEl = document.querySelector('#ld-fg-drawer-layer [data-value]');
+		var layerIcon = document.querySelector('#ld-fg-drawer-layer [data-icon]');
+		var actionEl = document.getElementById('ld-fg-drawer-action');
+		var providerEl = document.querySelector('#ld-fg-drawer-provider [data-value]');
+		var providerBadge = document.getElementById('ld-fg-drawer-provider-badge');
+		var confLabel = document.getElementById('ld-fg-drawer-confidence-label');
+		var confBar = document.getElementById('ld-fg-drawer-confidence-bar');
+		var badge = document.getElementById('ld-fg-drawer-verdict-badge');
+		var quarantineActions = document.getElementById('ld-fg-drawer-quarantine-actions');
+
+		setText(formEl, data.form);
+		setText(dateEl, data.date);
+		setText(titleEl, data.title || (i18n.submissionBlocked || 'Form Submission Blocked'));
+		setText(reasonEl, data.reason);
+		setText(integrationEl, data.integration);
+		setText(layerEl, data.layer);
+		setText(actionEl, data.action);
+		setText(providerEl, data.provider);
+
+		if (layerIcon) {
+			layerIcon.textContent = data.layer_key === 'ai' ? 'psychology' : 'smart_toy';
+		}
+
+		if (providerBadge) {
+			var key = String(data.provider_key || '');
+			if (key) {
+				providerBadge.textContent = key.charAt(0).toUpperCase();
+				providerBadge.classList.remove('hidden');
+			} else {
+				providerBadge.textContent = '';
+				providerBadge.classList.add('hidden');
+			}
+		}
+
+		var conf = parseInt(data.confidence, 10) || 0;
+		if (confLabel) confLabel.textContent = conf + '%';
+		if (confBar) confBar.style.width = Math.max(0, Math.min(100, conf)) + '%';
+
+		if (badge) {
+			var icon = badge.querySelector('[data-icon]');
+			var label = badge.querySelector('[data-label]');
+			badge.classList.remove('bg-error-container', 'text-on-error-container', 'bg-tertiary-container', 'text-on-tertiary-container', 'bg-[#e8f5e9]', 'text-[#2e7d32]');
+			if (data.verdict === 'quarantined') {
+				badge.classList.add('bg-tertiary-container', 'text-on-tertiary-container');
+				if (icon) icon.textContent = 'inventory_2';
+			} else if (data.verdict === 'allowed' || data.verdict === 'clean') {
+				badge.classList.add('bg-[#e8f5e9]', 'text-[#2e7d32]');
+				if (icon) icon.textContent = 'check_circle';
+			} else {
+				badge.classList.add('bg-error-container', 'text-on-error-container');
+				if (icon) icon.textContent = 'block';
+			}
+			if (label) label.textContent = data.verdict_label || data.verdict || 'Blocked';
+		}
+
+		if (quarantineActions) {
+			quarantineActions.classList.toggle('hidden', !data.is_quarantine);
+		}
+
+		renderCapturedFields(fieldsEl, data.fields, data.snippet);
+
 		overlay.classList.remove('hidden', 'opacity-0');
 		drawer.classList.remove('hidden', 'translate-x-full');
+		drawer.setAttribute('aria-hidden', 'false');
+		overlay.setAttribute('aria-hidden', 'false');
 	}
 
 	document.querySelectorAll('.ld-fg-log-view').forEach(function (btn) {
@@ -157,6 +317,14 @@
 			var row = btn.closest('.ld-fg-log-row');
 			if (row) openDrawer(row);
 		});
+	});
+
+	document.querySelectorAll('.ld-fg-log-row').forEach(function (row) {
+		row.addEventListener('click', function (e) {
+			if (e.target.closest('button')) return;
+			openDrawer(row);
+		});
+		row.style.cursor = 'pointer';
 	});
 
 	document.querySelectorAll('.ld-fg-drawer-close').forEach(function (btn) {
@@ -167,14 +335,20 @@
 	document.querySelectorAll('.ld-fg-release-quarantine').forEach(function (btn) {
 		btn.addEventListener('click', function () {
 			if (!activeLogId) return;
-			post('ld_fg_release_quarantine', { log_id: String(activeLogId) }).then(closeDrawer);
+			post('ld_fg_release_quarantine', { log_id: String(activeLogId) }).then(function () {
+				closeDrawer();
+				window.location.reload();
+			});
 		});
 	});
 
 	document.querySelectorAll('.ld-fg-discard-quarantine').forEach(function (btn) {
 		btn.addEventListener('click', function () {
 			if (!activeLogId) return;
-			post('ld_fg_discard_quarantine', { log_id: String(activeLogId) }).then(closeDrawer);
+			post('ld_fg_discard_quarantine', { log_id: String(activeLogId) }).then(function () {
+				closeDrawer();
+				window.location.reload();
+			});
 		});
 	});
 

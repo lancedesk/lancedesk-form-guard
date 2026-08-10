@@ -113,9 +113,25 @@ final class LD_FG_Adapter_Gravity implements LD_FG_Form_Adapter {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Intercept runs inside gform_validation after GF nonce checks.
 		if ( ! empty( $source['form']['fields'] ) && is_array( $source['form']['fields'] ) ) {
 			foreach ( $source['form']['fields'] as $field ) {
-				$input = 'input_' . ( is_object( $field ) ? $field->id : ( $field['id'] ?? '' ) );
-				if ( isset( $_POST[ $input ] ) ) {
-					$fields[] = sanitize_text_field( wp_unslash( (string) $_POST[ $input ] ) );
+				$field_id = is_object( $field ) ? (string) $field->id : (string) ( $field['id'] ?? '' );
+				$input    = 'input_' . $field_id;
+				if ( ! isset( $_POST[ $input ] ) ) {
+					continue;
+				}
+				$value = sanitize_text_field( wp_unslash( (string) $_POST[ $input ] ) );
+				if ( '' === $value ) {
+					continue;
+				}
+				$label = '';
+				if ( is_object( $field ) && ! empty( $field->label ) ) {
+					$label = sanitize_text_field( (string) $field->label );
+				} elseif ( is_array( $field ) && ! empty( $field['label'] ) ) {
+					$label = sanitize_text_field( (string) $field['label'] );
+				}
+				if ( '' !== $label ) {
+					$fields[ $label ] = $value;
+				} else {
+					$fields[] = $value;
 				}
 			}
 		}

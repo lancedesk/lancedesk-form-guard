@@ -326,6 +326,14 @@ final class LD_FG_Admin {
 			array(
 				'nonce'   => wp_create_nonce( 'ld_fg_admin' ),
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'i18n'    => array(
+					'fieldLabel'         => __( 'Field', 'lancedesk-form-guard' ),
+					'fieldPrefix'        => __( 'Field:', 'lancedesk-form-guard' ),
+					'flaggedContent'     => __( 'Flagged Content', 'lancedesk-form-guard' ),
+					'capturedContent'    => __( 'Captured content', 'lancedesk-form-guard' ),
+					'noCapturedFields'   => __( 'No captured fields for this entry.', 'lancedesk-form-guard' ),
+					'submissionBlocked'  => __( 'Form Submission Blocked', 'lancedesk-form-guard' ),
+				),
 			)
 		);
 
