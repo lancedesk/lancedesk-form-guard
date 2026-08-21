@@ -100,10 +100,12 @@ foreach ( $actions as $value => $labels ) :
 <ul class="divide-y divide-outline-variant/10">
 <?php
 $rules = array(
-	'honeypot'   => array( __( 'Invisible Honeypot Fields', 'lancedesk-form-guard' ), __( 'Injects a hidden field on protected forms. Bots that fill it are blocked instantly.', 'lancedesk-form-guard' ) ),
-	'too_fast'   => array( __( 'Time-to-Submit Heuristic', 'lancedesk-form-guard' ), __( 'Records when the form was shown and blocks submissions faster than ~3 seconds.', 'lancedesk-form-guard' ) ),
-	'url_count'  => array( __( 'URL Density Limit', 'lancedesk-form-guard' ), __( 'Block text areas containing an excessive ratio of hyperlinks.', 'lancedesk-form-guard' ) ),
-	'bbcode_url' => array( __( 'BBCode / Markdown Injection', 'lancedesk-form-guard' ), __( 'Reject standard forum markup often used by spam networks.', 'lancedesk-form-guard' ) ),
+	'honeypot'             => array( __( 'Invisible Honeypot Fields', 'lancedesk-form-guard' ), __( 'Injects a hidden field on protected forms. Bots that fill it are blocked instantly.', 'lancedesk-form-guard' ) ),
+	'too_fast'             => array( __( 'Time-to-Submit Heuristic', 'lancedesk-form-guard' ), __( 'Records when the form was shown and blocks submissions faster than ~3 seconds.', 'lancedesk-form-guard' ) ),
+	'url_count'            => array( __( 'URL Density Limit', 'lancedesk-form-guard' ), __( 'Block messages with more than 2 links — common for image-host and link spam.', 'lancedesk-form-guard' ) ),
+	'suspicious_links'     => array( __( 'Suspicious Link Hosts', 'lancedesk-form-guard' ), __( 'Block known spam image hosts and URL shorteners (im.ge, imgbb, bit.ly, and similar).', 'lancedesk-form-guard' ) ),
+	'commercial_outreach'  => array( __( 'Commercial / SEO Outreach', 'lancedesk-form-guard' ), __( 'Catch cold pitches: SEO audits, “money on the table,” agency sales CTAs, and handle dumps — even with no links.', 'lancedesk-form-guard' ) ),
+	'bbcode_url'           => array( __( 'BBCode / Markdown Injection', 'lancedesk-form-guard' ), __( 'Reject standard forum markup often used by spam networks.', 'lancedesk-form-guard' ) ),
 );
 foreach ( $rules as $key => $labels ) :
 	$on = ! empty( $heuristics[ $key ] );

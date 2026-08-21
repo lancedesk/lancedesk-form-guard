@@ -3,7 +3,7 @@
  * Plugin Name:       LanceDesk Form Guard
  * Plugin URI:        https://github.com/lancedesk/lancedesk-form-guard
  * Description:       Protects contact form submissions with local heuristics and optional AI classification before notification emails are sent.
- * Version:           0.1.1
+ * Version:           0.1.2
  * Author:            Lance Desk
  * Author URI:        https://lancedesk.com
  * Text Domain:       lancedesk-form-guard
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LD_FG_VERSION', '0.1.1' );
+define( 'LD_FG_VERSION', '0.1.2' );
 define( 'LD_FG_PLUGIN_FILE', __FILE__ );
 define( 'LD_FG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LD_FG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

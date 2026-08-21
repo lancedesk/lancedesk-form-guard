@@ -20,9 +20,39 @@ final class LD_FG_Heuristics {
 	public const MIN_SUBMIT_SECONDS = 3;
 
 	/**
-	 * Maximum URLs allowed in combined text fields.
+	 * Maximum URLs allowed in combined text fields (contact forms rarely need more).
 	 */
-	public const MAX_URL_COUNT = 5;
+	public const MAX_URL_COUNT = 2;
+
+	/**
+	 * Minimum commercial-outreach score to treat as spam.
+	 */
+	public const COMMERCIAL_SCORE_THRESHOLD = 4;
+
+	/**
+	 * Host fragments commonly used for link / image spam (matched against URL hosts).
+	 *
+	 * @var array<int, string>
+	 */
+	private const SUSPICIOUS_HOST_FRAGMENTS = array(
+		'im.ge',
+		'imglink.',
+		'uploadimages.',
+		'imgbb.',
+		'postimg.',
+		'freeimage.host',
+		'ibb.co',
+		'bit.ly',
+		'tinyurl.',
+		't.co',
+		'goo.gl',
+		'cutt.ly',
+		'rebrand.ly',
+		'is.gd',
+		'ow.ly',
+		'rb.gy',
+		'imgur.com',
+	);
 
 	/**
 	 * Run enabled heuristic checks on submission payload.
@@ -105,6 +135,52 @@ final class LD_FG_Heuristics {
 			}
 		}
 
+		if ( ! empty( $toggles['suspicious_links'] ) ) {
+			$host = self::first_suspicious_host( $combined );
+
+			if ( '' !== $host ) {
+				return array(
+					'verdict'    => 'spam',
+					'confidence' => 0.94,
+					/* translators: %s: suspicious hostname. */
+					'reason'     => sprintf( __( 'Suspicious link host detected (%s).', 'lancedesk-form-guard' ), $host ),
+					'layer'      => 'heuristic',
+					'matched'    => 'suspicious_links',
+				);
+			}
+		}
+
+		if ( ! empty( $toggles['commercial_outreach'] ) ) {
+			$commercial = self::score_commercial_outreach( $combined );
+
+			if ( $commercial['score'] >= self::COMMERCIAL_SCORE_THRESHOLD ) {
+				return array(
+					'verdict'    => 'spam',
+					'confidence' => min( 0.97, 0.75 + ( 0.03 * $commercial['score'] ) ),
+					/* translators: %s: short matched pattern list. */
+					'reason'     => sprintf(
+						__( 'Commercial / SEO outreach patterns detected (%s).', 'lancedesk-form-guard' ),
+						$commercial['label']
+					),
+					'layer'      => 'heuristic',
+					'matched'    => 'commercial_outreach',
+				);
+			}
+
+			$handle_count = self::count_handle_dump_lines( $combined );
+
+			if ( $handle_count >= 4 ) {
+				return array(
+					'verdict'    => 'spam',
+					'confidence' => 0.9,
+					/* translators: %d: number of handle-like lines. */
+					'reason'     => sprintf( __( 'Bulk social/handle dump detected (%d lines).', 'lancedesk-form-guard' ), $handle_count ),
+					'layer'      => 'heuristic',
+					'matched'    => 'commercial_outreach',
+				);
+			}
+		}
+
 		return $clean;
 	}
 
@@ -142,6 +218,125 @@ final class LD_FG_Heuristics {
 		}
 
 		$count = preg_match_all( '#https?://[^\s<>"\'\)\]]+#i', $text, $matches );
+
+		return false === $count ? 0 : $count;
+	}
+
+	/**
+	 * Return first suspicious URL host found, or empty string.
+	 *
+	 * @param string $text Combined text.
+	 *
+	 * @return string
+	 */
+	private static function first_suspicious_host( string $text ): string {
+		if ( '' === $text ) {
+			return '';
+		}
+
+		if ( ! preg_match_all( '#https?://([^\s<>"\'\)\]/]+)#i', $text, $matches ) ) {
+			return '';
+		}
+
+		foreach ( $matches[1] as $host ) {
+			$host = strtolower( (string) $host );
+			$host = preg_replace( '/:\d+$/', '', $host ) ?? $host;
+
+			foreach ( self::SUSPICIOUS_HOST_FRAGMENTS as $fragment ) {
+				if ( false !== strpos( $host, $fragment ) ) {
+					return $host;
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Score commercial / SEO cold-outreach language.
+	 *
+	 * @param string $text Combined text.
+	 *
+	 * @return array{score: int, label: string}
+	 */
+	private static function score_commercial_outreach( string $text ): array {
+		if ( '' === trim( $text ) ) {
+			return array(
+				'score' => 0,
+				'label' => '',
+			);
+		}
+
+		$haystack = strtolower( $text );
+		$score    = 0;
+		$hits     = array();
+
+		$patterns = array(
+			'leaving money on the table'         => array( 3, 'money on the table' ),
+			'we analyzed'                        => array( 2, 'we analyzed' ),
+			'seo audit'                          => array( 2, 'SEO audit' ),
+			'full-scale seo'                     => array( 2, 'full-scale SEO' ),
+			'full scale seo'                     => array( 2, 'full-scale SEO' ),
+			'keyword strategy'                   => array( 2, 'keyword strategy' ),
+			'outranking your competitors'        => array( 3, 'outranking competitors' ),
+			'outranking'                         => array( 1, 'outranking' ),
+			'reply to this email'                => array( 2, 'reply to this email' ),
+			'lead-generating'                    => array( 2, 'lead-generating' ),
+			'lead generating'                    => array( 2, 'lead-generating' ),
+			'revenue-generating'                 => array( 2, 'revenue-generating' ),
+			'revenue generating'                 => array( 2, 'revenue-generating' ),
+			'not targeting the right keywords'   => array( 3, 'wrong keywords' ),
+			'poorly optimized meta tags'         => array( 2, 'meta tags' ),
+			'missing or poorly optimized'        => array( 2, 'optimization pitch' ),
+			'converting visitors into customers' => array( 2, 'conversion pitch' ),
+			'your website is currently'          => array( 2, 'website pitch' ),
+			'critical seo issues'                => array( 3, 'critical SEO issues' ),
+			'seo knights'                        => array( 3, 'SEO vendor' ),
+			'digital marketing agency'           => array( 2, 'marketing agency' ),
+			'we can help you rank'               => array( 2, 'rank pitch' ),
+			'guaranteed first page'              => array( 3, 'guaranteed ranking' ),
+			'increase your traffic'              => array( 1, 'traffic pitch' ),
+			'grow your business online'          => array( 1, 'growth pitch' ),
+		);
+
+		foreach ( $patterns as $needle => $meta ) {
+			if ( false !== strpos( $haystack, $needle ) ) {
+				$score  += (int) $meta[0];
+				$hits[] = (string) $meta[1];
+			}
+		}
+
+		// Combo boost: sales CTA + SEO/marketing vocabulary.
+		$has_seo_vocab = ( false !== strpos( $haystack, 'seo' ) || false !== strpos( $haystack, 'ranking' ) || false !== strpos( $haystack, 'keywords' ) );
+		$has_sales_cta = ( false !== strpos( $haystack, 'reply' ) || false !== strpos( $haystack, 'let’s discuss' ) || false !== strpos( $haystack, "let's discuss" ) || false !== strpos( $haystack, 'contact us' ) );
+
+		if ( $has_seo_vocab && $has_sales_cta ) {
+			$score += 2;
+			$hits[] = 'SEO + sales CTA';
+		}
+
+		$hits  = array_values( array_unique( $hits ) );
+		$label = implode( ', ', array_slice( $hits, 0, 3 ) );
+
+		return array(
+			'score' => $score,
+			'label' => $label,
+		);
+	}
+
+	/**
+	 * Count pipe-prefixed handle dump lines (common in social spam payloads).
+	 *
+	 * @param string $text Combined text.
+	 *
+	 * @return int
+	 */
+	private static function count_handle_dump_lines( string $text ): int {
+		if ( '' === $text ) {
+			return 0;
+		}
+
+		$count = preg_match_all( '/^\s*\|[a-z0-9_.\-\/]+\s*$/mi', $text );
 
 		return false === $count ? 0 : $count;
 	}

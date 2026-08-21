@@ -37,6 +37,7 @@ build/
 /tests/coverage/
 
 # Dev-only (kept locally; not published to GitHub / wp.org)
+/assets/
 /docs/
 /html_templates/
 /bin/

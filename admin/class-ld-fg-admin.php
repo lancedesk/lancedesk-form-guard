@@ -169,7 +169,7 @@ final class LD_FG_Admin {
 		}
 
 		if ( isset( $input['heuristics'] ) && is_array( $input['heuristics'] ) ) {
-			$keys = array( 'bbcode_url', 'url_count', 'honeypot', 'too_fast' );
+			$keys = array( 'bbcode_url', 'url_count', 'honeypot', 'too_fast', 'suspicious_links', 'commercial_outreach' );
 			foreach ( $keys as $key ) {
 				$output['heuristics'][ $key ] = ! empty( $input['heuristics'][ $key ] ) ? 1 : 0;
 			}

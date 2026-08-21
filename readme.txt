@@ -4,7 +4,7 @@ Tags: spam, forms, security, ai, antispam
 Requires at least: 6.4
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Protects contact form submissions with local heuristics and optional AI classifi
 
 LanceDesk Form Guard protects contact and registration forms from spam using a two-layer defense system:
 
-* **Layer 1 — Heuristics:** Fast deterministic checks for BBCode injection, link stuffing, honeypot fields, and too-fast submissions.
+* **Layer 1 — Heuristics:** Fast deterministic checks for BBCode injection, link stuffing, suspicious image/short hosts, commercial/SEO cold outreach, honeypot fields, and too-fast submissions.
 * **Layer 2 — AI Analysis:** Optional semantic spam classification via Groq, OpenAI, or Anthropic.
 
 Supports WPForms, Contact Form 7, Gravity Forms, Quform, and Ninja Forms. Logs blocked and quarantined submissions with hashed IP and email values for privacy.
@@ -69,7 +69,20 @@ This plugin optionally connects to third-party AI APIs to classify form submissi
 * Terms of Service: https://www.anthropic.com/legal/consumer-terms
 * Privacy Policy: https://www.anthropic.com/legal/privacy
 
+== Screenshots ==
+
+1. First-run setup checklist to get Form Guard protecting forms quickly.
+2. Integrations screen showing supported form plugins (active, inactive, or unavailable).
+3. Forms list with per-form protection toggles.
+4. Protection rules: default action and Layer 1 heuristic controls.
+5. AI providers with encrypted API keys and connection testing.
+6. Dashboard with recent blocks, detection layers, and reason snippets.
+7. Log detail drawer with integration, layer, provider, confidence, reason, and captured fields.
+
 == Changelog ==
+
+= 0.1.2 =
+* Stronger Layer 1 heuristics when AI is off: max 2 links, suspicious image/shortener hosts, commercial/SEO outreach patterns, and handle dumps.
 
 = 0.1.1 =
 * Log detail drawer shows integration, layer, provider, action, confidence, reason, and captured fields.
