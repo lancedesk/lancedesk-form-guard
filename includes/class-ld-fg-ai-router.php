@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Calls Groq, OpenAI, or Anthropic for JSON spam verdicts.
  */
-final class LD_FG_AI_Router {
+	final class LD_FG_AI_Router {
 
 	/**
 	 * HTTP timeout in seconds.
@@ -23,6 +23,15 @@ final class LD_FG_AI_Router {
 	 * Transient cache TTL in seconds.
 	 */
 	public const CACHE_TTL = 3600;
+
+	/**
+	 * Provider API endpoints (user-configured optional Layer 2; documented in readme.txt).
+	 */
+	// phpcs:disable PluginCheck.CodeAnalysis.AIProvider.DirectIntegration -- Optional user-configured providers; admin supplies API keys; documented in readme.txt (Guideline 6).
+	private const ENDPOINT_GROQ      = 'https://api.groq.com/openai/v1/chat/completions';
+	private const ENDPOINT_OPENAI    = 'https://api.openai.com/v1/chat/completions';
+	private const ENDPOINT_ANTHROPIC = 'https://api.anthropic.com/v1/messages';
+	// phpcs:enable PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
 
 	/**
 	 * Classify submission content via configured providers.
@@ -136,7 +145,7 @@ final class LD_FG_AI_Router {
 		switch ( $provider_id ) {
 			case 'groq':
 				return self::call_openai_compatible(
-					'https://api.groq.com/openai/v1/chat/completions',
+					self::ENDPOINT_GROQ,
 					$api_key,
 					$model ?: 'llama-3.1-8b-instant',
 					$content,
@@ -144,7 +153,7 @@ final class LD_FG_AI_Router {
 				);
 			case 'openai':
 				return self::call_openai_compatible(
-					'https://api.openai.com/v1/chat/completions',
+					self::ENDPOINT_OPENAI,
 					$api_key,
 					$model ?: 'gpt-4o-mini',
 					$content,
@@ -238,7 +247,7 @@ final class LD_FG_AI_Router {
 		);
 
 		$response = wp_remote_post(
-			'https://api.anthropic.com/v1/messages',
+			self::ENDPOINT_ANTHROPIC,
 			array(
 				'timeout' => self::TIMEOUT,
 				'headers' => array(

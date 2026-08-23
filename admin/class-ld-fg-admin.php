@@ -32,6 +32,7 @@ final class LD_FG_Admin {
 		add_action( 'wp_ajax_ld_fg_test_provider', array( $this, 'ajax_test_provider' ) );
 		add_action( 'wp_ajax_ld_fg_release_quarantine', array( $this, 'ajax_release_quarantine' ) );
 		add_action( 'wp_ajax_ld_fg_discard_quarantine', array( $this, 'ajax_discard_quarantine' ) );
+		add_action( 'wp_ajax_ld_fg_mark_log_read', array( $this, 'ajax_mark_log_read' ) );
 		add_action( 'wp_ajax_ld_fg_dismiss_setup', array( $this, 'ajax_dismiss_setup' ) );
 		add_action( 'wp_ajax_ld_fg_save_settings', array( $this, 'ajax_save_settings' ) );
 	}
@@ -234,6 +235,14 @@ final class LD_FG_Admin {
 			$output['protect_all'] = $protect_all;
 		}
 
+		if ( array_key_exists( 'protect_core_comments', $input ) ) {
+			$output['protect_core_comments'] = ! empty( $input['protect_core_comments'] ) ? 1 : 0;
+		}
+
+		if ( array_key_exists( 'protect_core_registration', $input ) ) {
+			$output['protect_core_registration'] = ! empty( $input['protect_core_registration'] ) ? 1 : 0;
+		}
+
 		// Guidelines 7 & 9: no third-party submission data without explicit privacy acknowledgment.
 		if ( empty( $output['privacy_ack'] ) ) {
 			$output['ai_enabled'] = 0;
@@ -368,6 +377,7 @@ final class LD_FG_Admin {
 		$ld_fg_partial    = LD_FG_PLUGIN_DIR . 'admin/partials/' . $partial_file;
 		$ld_fg_settings   = LD_FG_Settings::get();
 		$ld_fg_enabled    = ! empty( $ld_fg_settings['enabled'] );
+		$ld_fg_logs_unread = LD_FG_Logger::count_unread( get_current_user_id() );
 
 		if ( ! file_exists( $ld_fg_partial ) ) {
 			wp_die( esc_html__( 'Admin view not found.', 'lancedesk-form-guard' ) );
@@ -385,8 +395,9 @@ final class LD_FG_Admin {
 	private function maybe_enable_when_forms_protected(): void {
 		$settings  = LD_FG_Settings::get();
 		$protected = isset( $settings['protected_forms'] ) ? (array) $settings['protected_forms'] : array();
+		$core_on   = ! empty( $settings['protect_core_comments'] ) || ! empty( $settings['protect_core_registration'] );
 
-		if ( empty( $settings['enabled'] ) && ! empty( $protected ) ) {
+		if ( empty( $settings['enabled'] ) && ( ! empty( $protected ) || $core_on ) ) {
 			LD_FG_Settings::update( array( 'enabled' => 1 ) );
 		}
 	}
@@ -578,6 +589,27 @@ final class LD_FG_Admin {
 
 		if ( ! LD_FG_Logger::update_status( $log_id, 'discarded' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Could not discard entry.', 'lancedesk-form-guard' ) ) );
+		}
+
+		wp_send_json_success();
+	}
+
+	/**
+	 * AJAX: mark a security log entry as read for the current user.
+	 *
+	 * @return void
+	 */
+	public function ajax_mark_log_read(): void {
+		check_ajax_referer( 'ld_fg_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'lancedesk-form-guard' ) ) );
+		}
+
+		$log_id = isset( $_POST['log_id'] ) ? absint( $_POST['log_id'] ) : 0;
+
+		if ( ! LD_FG_Logger::mark_read( $log_id, get_current_user_id() ) ) {
+			wp_send_json_error( array( 'message' => __( 'Could not mark entry as read.', 'lancedesk-form-guard' ) ) );
 		}
 
 		wp_send_json_success();

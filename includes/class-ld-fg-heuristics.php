@@ -27,32 +27,36 @@ final class LD_FG_Heuristics {
 	/**
 	 * Minimum commercial-outreach score to treat as spam.
 	 */
-	public const COMMERCIAL_SCORE_THRESHOLD = 4;
+	public const COMMERCIAL_SCORE_THRESHOLD = 3;
 
 	/**
 	 * Host fragments commonly used for link / image spam (matched against URL hosts).
 	 *
 	 * @var array<int, string>
 	 */
-	private const SUSPICIOUS_HOST_FRAGMENTS = array(
-		'im.ge',
-		'imglink.',
-		'uploadimages.',
-		'imgbb.',
-		'postimg.',
-		'freeimage.host',
-		'ibb.co',
-		'bit.ly',
-		'tinyurl.',
-		't.co',
-		'goo.gl',
-		'cutt.ly',
-		'rebrand.ly',
-		'is.gd',
-		'ow.ly',
-		'rb.gy',
-		'imgur.com',
-	);
+	private static function suspicious_host_fragments(): array {
+		// phpcs:disable PluginCheck.CodeAnalysis.Offloading.OffloadedContent -- Substring blocklist for spam URL detection; no assets are enqueued or loaded from these hosts.
+		return array(
+			'im.ge',
+			'imglink.',
+			'uploadimages.',
+			'imgbb.',
+			'postimg.',
+			'freeimage.host',
+			'ibb.co',
+			'bit.ly',
+			'tinyurl.',
+			't.co',
+			'goo.gl',
+			'cutt.ly',
+			'rebrand.ly',
+			'is.gd',
+			'ow.ly',
+			'rb.gy',
+			'imgur.',
+		);
+		// phpcs:enable PluginCheck.CodeAnalysis.Offloading.OffloadedContent
+	}
 
 	/**
 	 * Run enabled heuristic checks on submission payload.
@@ -157,8 +161,8 @@ final class LD_FG_Heuristics {
 				return array(
 					'verdict'    => 'spam',
 					'confidence' => min( 0.97, 0.75 + ( 0.03 * $commercial['score'] ) ),
-					/* translators: %s: short matched pattern list. */
 					'reason'     => sprintf(
+						/* translators: %s: short matched pattern list. */
 						__( 'Commercial / SEO outreach patterns detected (%s).', 'lancedesk-form-guard' ),
 						$commercial['label']
 					),
@@ -242,7 +246,7 @@ final class LD_FG_Heuristics {
 			$host = strtolower( (string) $host );
 			$host = preg_replace( '/:\d+$/', '', $host ) ?? $host;
 
-			foreach ( self::SUSPICIOUS_HOST_FRAGMENTS as $fragment ) {
+			foreach ( self::suspicious_host_fragments() as $fragment ) {
 				if ( false !== strpos( $host, $fragment ) ) {
 					return $host;
 				}
@@ -296,7 +300,18 @@ final class LD_FG_Heuristics {
 			'we can help you rank'               => array( 2, 'rank pitch' ),
 			'guaranteed first page'              => array( 3, 'guaranteed ranking' ),
 			'increase your traffic'              => array( 1, 'traffic pitch' ),
-			'grow your business online'          => array( 1, 'growth pitch' ),
+			'grow your business online'          => array( 2, 'growth pitch' ),
+			'would you be open to'               => array( 2, 'sales opener' ),
+			'reach out to discuss'               => array( 2, 'outreach CTA' ),
+			'partnership opportun'               => array( 2, 'partnership pitch' ),
+			'quick call'                         => array( 2, 'call CTA' ),
+			'schedule a call'                    => array( 2, 'call CTA' ),
+			'free consultation'                  => array( 2, 'consultation pitch' ),
+			'guest post'                         => array( 3, 'guest post pitch' ),
+			'link building'                      => array( 3, 'link building pitch' ),
+			'we noticed your website'          => array( 2, 'website pitch' ),
+			'seo services'                       => array( 2, 'SEO services pitch' ),
+			'rank better on google'              => array( 2, 'rank pitch' ),
 		);
 
 		foreach ( $patterns as $needle => $meta ) {

@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 </div>
 </div>
 <h2 class="font-headline-lg text-headline-lg text-on-surface mb-2"><?php esc_html_e( 'No compatible form plugins detected', 'lancedesk-form-guard' ); ?></h2>
-<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-sm"><?php esc_html_e( 'LanceDesk Form Guard requires a supported form plugin to function. Install and activate a compatible plugin to start protecting your forms.', 'lancedesk-form-guard' ); ?></p>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-sm"><?php esc_html_e( 'Install a supported form plugin to protect contact forms here. WordPress post comments can be protected without a form plugin — see Settings → WordPress Core.', 'lancedesk-form-guard' ); ?></p>
 <div class="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
 <a class="bg-primary text-on-primary font-label-md text-label-md px-6 py-3 rounded-lg shadow-sm hover:bg-primary/90 transition-colors flex items-center justify-center min-w-[200px]" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-integrations' ) ); ?>">
 <?php esc_html_e( 'Open Integrations', 'lancedesk-form-guard' ); ?>

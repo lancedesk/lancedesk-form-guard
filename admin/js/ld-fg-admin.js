@@ -227,6 +227,51 @@
 		});
 	}
 
+	function updateLogsUnreadBadge(delta) {
+		var badge = document.getElementById('ld-fg-logs-unread-badge');
+		if (!badge) {
+			return;
+		}
+
+		var current = parseInt(badge.textContent, 10) || 0;
+		if (badge.textContent.indexOf('+') !== -1) {
+			current = 100;
+		}
+
+		var next = Math.max(0, current + (delta || 0));
+		if (next <= 0) {
+			badge.classList.add('hidden');
+			badge.textContent = '0';
+			badge.setAttribute('aria-label', '0 unread log entries');
+			return;
+		}
+
+		badge.classList.remove('hidden');
+		badge.textContent = next > 99 ? '99+' : String(next);
+		badge.setAttribute(
+			'aria-label',
+			next === 1 ? '1 unread log entry' : next + ' unread log entries'
+		);
+	}
+
+	function markLogRead(row) {
+		if (!row || row.getAttribute('data-read') === '1') {
+			return;
+		}
+
+		var logId = parseInt(row.getAttribute('data-log-id'), 10) || 0;
+		if (!logId) {
+			return;
+		}
+
+		row.setAttribute('data-read', '1');
+		row.classList.remove('is-unread');
+		row.classList.add('is-read');
+
+		updateLogsUnreadBadge(-1);
+		post('ld_fg_mark_log_read', { log_id: String(logId) });
+	}
+
 	function openDrawer(row) {
 		if (!drawer || !overlay || !row) return;
 		var raw = row.getAttribute('data-log') || '{}';
@@ -310,6 +355,8 @@
 		drawer.classList.remove('hidden', 'translate-x-full');
 		drawer.setAttribute('aria-hidden', 'false');
 		overlay.setAttribute('aria-hidden', 'false');
+
+		markLogRead(row);
 	}
 
 	document.querySelectorAll('.ld-fg-log-view').forEach(function (btn) {
@@ -365,7 +412,8 @@
 				enabled: document.getElementById('ld-fg-master-toggle') && document.getElementById('ld-fg-master-toggle').checked ? 1 : 0,
 				retention_days: document.getElementById('ld-fg-log-retention') ? document.getElementById('ld-fg-log-retention').value : 90,
 				delete_on_uninstall: document.getElementById('ld-fg-delete-on-uninstall') && document.getElementById('ld-fg-delete-on-uninstall').checked ? 1 : 0,
-				privacy_ack: document.getElementById('ld-fg-privacy-ack') && document.getElementById('ld-fg-privacy-ack').checked ? 1 : 0
+				privacy_ack: document.getElementById('ld-fg-privacy-ack') && document.getElementById('ld-fg-privacy-ack').checked ? 1 : 0,
+				protect_core_comments: document.getElementById('ld-fg-protect-comments') && document.getElementById('ld-fg-protect-comments').checked ? 1 : 0
 			};
 			var saveBtn = document.getElementById('ld-fg-save-btn');
 			var status = document.getElementById('ld-fg-save-status');

@@ -344,6 +344,111 @@ final class LD_FG_Logger {
 	}
 
 	/**
+	 * Mark a log entry as read for the current admin user.
+	 *
+	 * @param int $log_id  Log ID.
+	 * @param int $user_id WordPress user ID.
+	 *
+	 * @return bool
+	 */
+	public static function mark_read( int $log_id, int $user_id ): bool {
+		global $wpdb;
+
+		$table = LD_FG_DB::table_name( 'log_reads' );
+
+		if ( '' === $table || $log_id <= 0 || $user_id <= 0 ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$result = $wpdb->replace(
+			$table,
+			array(
+				'log_id'  => $log_id,
+				'user_id' => $user_id,
+				'read_at' => current_time( 'mysql' ),
+			),
+			array( '%d', '%d', '%s' )
+		);
+
+		return false !== $result;
+	}
+
+	/**
+	 * Return log IDs the user has already read.
+	 *
+	 * @param int             $user_id WordPress user ID.
+	 * @param array<int, int> $log_ids Candidate log IDs.
+	 *
+	 * @return array<int, int>
+	 */
+	public static function get_read_ids( int $user_id, array $log_ids ): array {
+		global $wpdb;
+
+		$table = LD_FG_DB::table_name( 'log_reads' );
+
+		if ( '' === $table || $user_id <= 0 || empty( $log_ids ) ) {
+			return array();
+		}
+
+		$log_ids = array_values(
+			array_filter(
+				array_map( 'absint', $log_ids ),
+				static function ( int $id ): bool {
+					return $id > 0;
+				}
+			)
+		);
+
+		if ( empty( $log_ids ) ) {
+			return array();
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $log_ids ), '%d' ) );
+		$params       = array_merge( array( $table, $user_id ), $log_ids );
+		$sql          = "SELECT log_id FROM %i WHERE user_id = %d AND log_id IN ({$placeholders})";
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- IN placeholders are %d; table via %i.
+		$rows = $wpdb->get_col( $wpdb->prepare( $sql, ...$params ) );
+
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		return array_map( 'absint', $rows );
+	}
+
+	/**
+	 * Count log entries the user has not opened yet.
+	 *
+	 * @param int $user_id WordPress user ID.
+	 *
+	 * @return int
+	 */
+	public static function count_unread( int $user_id ): int {
+		global $wpdb;
+
+		$logs_table  = LD_FG_DB::table_name( 'logs' );
+		$reads_table = LD_FG_DB::table_name( 'log_reads' );
+
+		if ( '' === $logs_table || '' === $reads_table || $user_id <= 0 ) {
+			return 0;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM %i AS l LEFT JOIN %i AS r ON r.log_id = l.id AND r.user_id = %d WHERE r.log_id IS NULL",
+				$logs_table,
+				$reads_table,
+				$user_id
+			)
+		);
+
+		return max( 0, (int) $count );
+	}
+
+	/**
 	 * Hash IP for privacy-safe storage.
 	 *
 	 * @param string $ip Raw IP.

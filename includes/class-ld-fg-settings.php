@@ -43,8 +43,10 @@ final class LD_FG_Settings {
 			'ai_enabled'            => 0,
 			'confidence_quarantine' => 0.7,
 			'confidence_block'      => 0.9,
-			'protected_forms'       => array(),
-			'protect_all'           => array(),
+			'protected_forms'          => array(),
+			'protect_all'              => array(),
+			'protect_core_comments'    => 1,
+			'protect_core_registration' => 0,
 			'providers'             => array(
 				'groq'      => array(
 					'enabled' => 0,
@@ -196,6 +198,18 @@ final class LD_FG_Settings {
 		$settings = self::get();
 
 		if ( empty( $settings['enabled'] ) ) {
+			return false;
+		}
+
+		if ( 'core' === $integration ) {
+			if ( 'comment' === $form_id ) {
+				return ! empty( $settings['protect_core_comments'] );
+			}
+
+			if ( 'registration' === $form_id ) {
+				return ! empty( $settings['protect_core_registration'] );
+			}
+
 			return false;
 		}
 

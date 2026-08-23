@@ -16,9 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 $plugin    = LD_FG_Plugin::instance();
 $available = $plugin->get_available_adapters();
 $protected = isset( $ld_fg_settings['protected_forms'] ) ? (array) $ld_fg_settings['protected_forms'] : array();
+$protect_core_comments = ! empty( $ld_fg_settings['protect_core_comments'] );
 $all_forms = array();
 
 foreach ( $available as $slug => $adapter ) {
+	if ( 'core' === $slug ) {
+		continue;
+	}
 	foreach ( $adapter->list_forms() as $form ) {
 		$key         = $slug . ':' . $form['id'];
 		$all_forms[] = array(
@@ -32,7 +36,15 @@ foreach ( $available as $slug => $adapter ) {
 	}
 }
 
-if ( empty( $available ) ) :
+$form_plugins = array_filter(
+	$available,
+	static function ( LD_FG_Form_Adapter $adapter, string $slug ): bool {
+		return 'core' !== $slug;
+	},
+	ARRAY_FILTER_USE_BOTH
+);
+
+if ( empty( $form_plugins ) ) :
 	require LD_FG_PLUGIN_DIR . 'admin/partials/part-forms-empty.php';
 	return;
 endif;
@@ -41,13 +53,16 @@ endif;
 <div class="flex justify-between items-center mb-6">
 <h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Forms', 'lancedesk-form-guard' ); ?></h1>
 </div>
+<?php if ( $protect_core_comments ) : ?>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-2xl mb-4"><?php esc_html_e( 'WordPress post comments are protected site-wide. Enable or disable that under Settings → WordPress Core.', 'lancedesk-form-guard' ); ?> <a class="text-primary hover:underline" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-settings' ) ); ?>"><?php esc_html_e( 'Open Settings', 'lancedesk-form-guard' ); ?></a></p>
+<?php endif; ?>
 <div class="bg-surface-container-lowest shadow-sm rounded-lg flex flex-col">
 <div class="p-margin-lg bg-surface flex flex-col md:flex-row gap-4 justify-between items-start md:items-center rounded-t-lg">
 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
 <div class="relative">
 <select class="ld-fg-filter-integration ld-fg-select bg-surface-container-lowest border border-outline-variant text-on-surface font-body-sm text-body-sm px-3 py-1.5 pr-9 rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-[32px]">
 <option value="all"><?php esc_html_e( 'All Integrations', 'lancedesk-form-guard' ); ?></option>
-<?php foreach ( $available as $slug => $adapter ) : ?>
+<?php foreach ( $form_plugins as $slug => $adapter ) : ?>
 <option value="<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $adapter->get_label() ); ?></option>
 <?php endforeach; ?>
 </select>

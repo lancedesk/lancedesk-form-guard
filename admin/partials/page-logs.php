@@ -13,6 +13,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $logs  = LD_FG_Logger::query_recent( 25 );
 $total = count( $logs );
+$read_ids = array();
+
+if ( ! empty( $logs ) ) {
+	$read_ids = array_flip(
+		LD_FG_Logger::get_read_ids(
+			get_current_user_id(),
+			array_map(
+				static function ( array $log ): int {
+					return (int) ( $log['id'] ?? 0 );
+				},
+				$logs
+			)
+		)
+	);
+}
 ?>
 <div class="flex flex-col w-full ld-fg-logs-page">
 <div class="flex items-center justify-between mb-6">
@@ -28,17 +43,26 @@ $total = count( $logs );
 </div>
 </div>
 <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse ld-fg-logs-table">
+<div class="ld-fg-logs-table-wrap">
+<table class="text-left border-collapse ld-fg-logs-table">
+<colgroup>
+<col class="ld-fg-col-date"/>
+<col class="ld-fg-col-form"/>
+<col class="ld-fg-col-verdict"/>
+<col class="ld-fg-col-layer"/>
+<col class="ld-fg-col-confidence"/>
+<col class="ld-fg-col-reason"/>
+<col class="ld-fg-col-actions"/>
+</colgroup>
 <thead>
-<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
-<th class="px-margin-md py-3 font-semibold"><?php esc_html_e( 'Date / Time', 'lancedesk-form-guard' ); ?></th>
-<th class="px-margin-md py-3 font-semibold"><?php esc_html_e( 'Form Source', 'lancedesk-form-guard' ); ?></th>
-<th class="px-margin-md py-3 font-semibold"><?php esc_html_e( 'Verdict', 'lancedesk-form-guard' ); ?></th>
-<th class="px-margin-md py-3 font-semibold"><?php esc_html_e( 'Detection Layer', 'lancedesk-form-guard' ); ?></th>
-<th class="px-margin-md py-3 font-semibold text-right"><?php esc_html_e( 'Confidence', 'lancedesk-form-guard' ); ?></th>
-<th class="px-margin-md py-3 font-semibold"><?php esc_html_e( 'Reason Snapshot', 'lancedesk-form-guard' ); ?></th>
-<th class="px-margin-md py-3 font-semibold w-12 text-center"><?php esc_html_e( 'Actions', 'lancedesk-form-guard' ); ?></th>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-md text-label-md uppercase ld-fg-logs-table-head">
+<th class="ld-fg-log-date-cell"><?php esc_html_e( 'Date', 'lancedesk-form-guard' ); ?></th>
+<th class="ld-fg-log-form-cell"><?php esc_html_e( 'Form', 'lancedesk-form-guard' ); ?></th>
+<th class="ld-fg-log-verdict-cell"><?php esc_html_e( 'Verdict', 'lancedesk-form-guard' ); ?></th>
+<th class="ld-fg-log-detection-cell" title="<?php esc_attr_e( 'Detection layer', 'lancedesk-form-guard' ); ?>"><?php esc_html_e( 'Layer', 'lancedesk-form-guard' ); ?></th>
+<th class="ld-fg-log-confidence-cell"><?php esc_html_e( 'Confidence', 'lancedesk-form-guard' ); ?></th>
+<th class="ld-fg-log-reason-cell"><?php esc_html_e( 'Reason', 'lancedesk-form-guard' ); ?></th>
+<th class="ld-fg-log-actions-cell"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'lancedesk-form-guard' ); ?></span></th>
 </tr>
 </thead>
 <tbody class="font-body-sm text-body-sm text-on-surface">
@@ -81,9 +105,14 @@ $provider_labels    = array(
 	$provider_key = sanitize_key( (string) ( $meta['provider'] ?? '' ) );
 	$fields       = isset( $meta['fields'] ) && is_array( $meta['fields'] ) ? $meta['fields'] : array();
 	$snippet      = (string) ( $log['snippet'] ?? '' );
-	$layer_label  = 'ai' === $layer
+	$layer_label = 'ai' === $layer
 		? __( 'AI Analysis', 'lancedesk-form-guard' )
 		: ( 'none' === $layer ? __( 'None', 'lancedesk-form-guard' ) : __( 'Heuristic Analysis', 'lancedesk-form-guard' ) );
+	$layer_label_short = 'ai' === $layer
+		? __( 'AI', 'lancedesk-form-guard' )
+		: ( 'none' === $layer ? __( 'None', 'lancedesk-form-guard' ) : __( 'Heuristic', 'lancedesk-form-guard' ) );
+	$layer_icon  = 'ai' === $layer ? 'psychology' : ( 'none' === $layer ? 'verified' : 'rule' );
+	$reason_full = (string) ( $log['reason'] ?? '' );
 	$integration_label = $integration_labels[ $integration ] ?? ( $integration ? ucwords( str_replace( '_', ' ', $integration ) ) : '—' );
 	$action_label      = $action_labels[ $action ] ?? ( $action ? ucwords( str_replace( '_', ' ', $action ) ) : '—' );
 	$provider_label    = '' !== $provider_key
@@ -118,22 +147,24 @@ $provider_labels    = array(
 		'fields'            => $fields,
 		'is_quarantine'     => ( 'quarantined' === $verdict || 'quarantine' === $action ),
 	);
+	$is_read = isset( $read_ids[ (int) $log['id'] ] );
 	?>
 <tr
-	class="hover:bg-surface-container-lowest transition-colors border-t border-outline-variant/30 group ld-fg-log-row"
+	class="hover:bg-surface-container-lowest transition-colors border-t border-outline-variant/30 group ld-fg-log-row<?php echo $is_read ? ' is-read' : ' is-unread'; ?>"
 	data-log-id="<?php echo esc_attr( (string) $log['id'] ); ?>"
+	data-read="<?php echo $is_read ? '1' : '0'; ?>"
 	data-log="<?php echo esc_attr( wp_json_encode( $payload ) ); ?>"
 >
-<td class="px-margin-md py-3 whitespace-nowrap">
+<td class="ld-fg-log-date-cell">
 <div class="font-medium"><?php echo esc_html( mysql2date( 'M j, H:i:s', $log['created_at'] ) ); ?></div>
 </td>
-<td class="px-margin-md py-3 whitespace-nowrap">
-<div class="flex items-center gap-2">
+<td class="ld-fg-log-form-cell">
+<div class="ld-fg-log-form-inner">
 <span class="ld-fg-icon material-symbols-outlined text-outline text-[16px]" aria-hidden="true">contact_page</span>
-<span><?php echo esc_html( $form_title ); ?></span>
+<span class="ld-fg-log-form-title"><?php echo esc_html( $form_title ); ?></span>
 </div>
 </td>
-<td class="px-margin-md py-3 whitespace-nowrap">
+<td class="ld-fg-log-verdict-cell">
 <?php if ( 'quarantined' === $verdict ) : ?>
 <span class="inline-flex items-center px-2 py-1 rounded bg-tertiary-container text-on-tertiary-container font-label-md text-[11px] uppercase tracking-wide"><?php echo esc_html( $verdict_label ); ?></span>
 <?php elseif ( 'allowed' === $verdict || 'clean' === $verdict ) : ?>
@@ -142,21 +173,21 @@ $provider_labels    = array(
 <span class="inline-flex items-center px-2 py-1 rounded bg-error-container text-on-error-container font-label-md text-[11px] uppercase tracking-wide"><?php echo esc_html( $verdict_label ); ?></span>
 <?php endif; ?>
 </td>
-<td class="px-margin-md py-3 whitespace-nowrap">
-<div class="flex items-center gap-1.5">
-<span class="ld-fg-icon material-symbols-outlined text-primary text-[14px]" aria-hidden="true"><?php echo 'ai' === $layer ? 'psychology' : 'rule'; ?></span>
-<?php echo esc_html( $layer_label ); ?>
+<td class="ld-fg-log-detection-cell">
+<div class="ld-fg-log-layer-inner">
+<span class="ld-fg-icon material-symbols-outlined text-primary text-[16px]" aria-hidden="true"><?php echo esc_html( $layer_icon ); ?></span>
+<span class="ld-fg-log-layer-label"><?php echo esc_html( $layer_label_short ); ?></span>
 </div>
 </td>
-<td class="px-margin-md py-3 whitespace-nowrap text-right">
+<td class="ld-fg-log-confidence-cell">
 <span class="font-medium"><?php echo esc_html( (string) $conf_pct ); ?>%</span>
 </td>
-<td class="px-margin-md py-3">
-<div class="truncate max-w-[200px] text-on-surface-variant" title="<?php echo esc_attr( (string) $log['reason'] ); ?>"><?php echo esc_html( wp_trim_words( (string) $log['reason'], 6, '...' ) ); ?></div>
+<td class="ld-fg-log-reason-cell">
+<span class="ld-fg-log-reason-text text-on-surface-variant" title="<?php echo esc_attr( $reason_full ); ?>"><?php echo esc_html( $reason_full ); ?></span>
 </td>
-<td class="px-margin-md py-3 text-center">
-<button type="button" class="ld-fg-log-view text-outline hover:text-primary transition-colors p-1 rounded hover:bg-surface-container" data-log-id="<?php echo esc_attr( (string) $log['id'] ); ?>" title="<?php esc_attr_e( 'View Details', 'lancedesk-form-guard' ); ?>">
-<span class="ld-fg-icon material-symbols-outlined text-[20px]">visibility</span>
+<td class="ld-fg-log-actions-cell">
+<button type="button" class="ld-fg-log-view" data-log-id="<?php echo esc_attr( (string) $log['id'] ); ?>" title="<?php esc_attr_e( 'View Details', 'lancedesk-form-guard' ); ?>">
+<span class="ld-fg-icon material-symbols-outlined text-[20px]" aria-hidden="true">visibility</span>
 </button>
 </td>
 </tr>

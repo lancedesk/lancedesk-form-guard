@@ -17,7 +17,7 @@ final class LD_FG_DB {
 	/**
 	 * Current schema version stored in options.
 	 */
-	public const DB_VERSION = '1.0.0';
+	public const DB_VERSION = '1.1.0';
 
 	/**
 	 * Return fully qualified table names.
@@ -28,7 +28,8 @@ final class LD_FG_DB {
 		global $wpdb;
 
 		return array(
-			'logs' => $wpdb->prefix . 'ld_fg_logs',
+			'logs'      => $wpdb->prefix . 'ld_fg_logs',
+			'log_reads' => $wpdb->prefix . 'ld_fg_log_reads',
 		);
 	}
 
@@ -87,7 +88,37 @@ final class LD_FG_DB {
 
 		dbDelta( $sql_logs );
 
+		$log_reads = $tables['log_reads'];
+
+		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- dbDelta requires raw CREATE TABLE strings.
+		$sql_reads = "CREATE TABLE {$log_reads} (
+			log_id BIGINT UNSIGNED NOT NULL,
+			user_id BIGINT UNSIGNED NOT NULL,
+			read_at DATETIME NOT NULL,
+			PRIMARY KEY  (log_id, user_id),
+			KEY user_id (user_id),
+			KEY read_at (read_at)
+		) {$charset};";
+		// phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
+
+		dbDelta( $sql_reads );
+
 		update_option( 'ld_fg_db_version', self::DB_VERSION );
+	}
+
+	/**
+	 * Run dbDelta when the bundled schema version increases.
+	 *
+	 * @return void
+	 */
+	public static function maybe_upgrade(): void {
+		$installed = (string) get_option( 'ld_fg_db_version', '0' );
+
+		if ( version_compare( $installed, self::DB_VERSION, '>=' ) ) {
+			return;
+		}
+
+		self::create_tables();
 	}
 
 	/**
@@ -138,8 +169,10 @@ final class LD_FG_DB {
 				'ai_enabled'            => 0,
 				'confidence_quarantine' => 0.7,
 				'confidence_block'      => 0.9,
-				'protected_forms'       => array(),
-				'protect_all'           => array(),
+				'protected_forms'          => array(),
+				'protect_all'              => array(),
+				'protect_core_comments'    => 1,
+				'protect_core_registration' => 0,
 				'providers'             => array(
 					'groq'      => array(
 						'enabled' => 0,

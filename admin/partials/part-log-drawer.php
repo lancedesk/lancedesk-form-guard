@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 </span>
 <span id="ld-fg-drawer-form" class="font-body-sm text-body-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded"></span>
 </div>
-<button type="button" class="ld-fg-drawer-close text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded-full hover:bg-surface-container" aria-label="<?php esc_attr_e( 'Close', 'lancedesk-form-guard' ); ?>">
+<button type="button" class="ld-fg-drawer-close ld-fg-drawer-close-icon" aria-label="<?php esc_attr_e( 'Close', 'lancedesk-form-guard' ); ?>">
 <span class="ld-fg-icon material-symbols-outlined text-[20px]">close</span>
 </button>
 </div>

@@ -216,6 +216,10 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
 .ld-fg-admin-sidebar .ld-fg-nav-link__badge {
   flex-shrink: 0;
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
   padding: 0.125rem 0.375rem;
   border-radius: 9999px;
   background: #46b450;
@@ -223,6 +227,17 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
+}
+.ld-fg-admin-sidebar .ld-fg-nav-link__badge--count {
+  background: #d63638;
+  color: #fff;
+}
+.ld-fg-admin-sidebar .ld-fg-nav-link.is-active .ld-fg-nav-link__badge--count {
+  background: #d63638;
+  color: #fff;
+}
+.ld-fg-admin-sidebar .ld-fg-nav-link__badge.hidden {
+  display: none;
 }
 
 .ld-fg-admin-main {
@@ -323,6 +338,126 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
   padding-left: 3rem !important;
 }
 
+/* Logs table — full width; Reason absorbs leftover space */
+.ld-fg-admin-wrap .ld-fg-logs-table-wrap {
+  width: 100%;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table {
+  table-layout: fixed;
+  width: 100%;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table col.ld-fg-col-date { width: 9rem; }
+.ld-fg-admin-wrap .ld-fg-logs-table col.ld-fg-col-form { width: 14rem; }
+.ld-fg-admin-wrap .ld-fg-logs-table col.ld-fg-col-verdict { width: 6.5rem; }
+.ld-fg-admin-wrap .ld-fg-logs-table col.ld-fg-col-layer { width: 8rem; }
+.ld-fg-admin-wrap .ld-fg-logs-table col.ld-fg-col-confidence { width: 6.75rem; }
+.ld-fg-admin-wrap .ld-fg-logs-table col.ld-fg-col-actions { width: 2.75rem; }
+.ld-fg-admin-wrap .ld-fg-logs-table th,
+.ld-fg-admin-wrap .ld-fg-logs-table td {
+  padding: 0.75rem 0.625rem;
+  vertical-align: top;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table-head th {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-date-cell {
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-form-cell {
+  min-width: 14rem;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-form-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-form-inner .ld-fg-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-form-title {
+  line-height: 1.35;
+  min-width: 0;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-verdict-cell {
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-detection-cell {
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-layer-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-layer-label {
+  font-size: 13px;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-confidence-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-reason-cell {
+  overflow: hidden;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-reason-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-actions-cell {
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #717881;
+  cursor: pointer;
+  line-height: 1;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-view .ld-fg-icon {
+  display: block;
+  line-height: 1;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-view:hover,
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-view:focus-visible {
+  background: #e9eef4;
+  color: #005891;
+  outline: none;
+}
+
+/* Log read state — unread rows use semibold text like an inbox */
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-unread .ld-fg-log-date-cell,
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-unread .ld-fg-log-form-title,
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-unread .ld-fg-log-layer-label,
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-unread .ld-fg-log-confidence-cell,
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-unread .ld-fg-log-reason-text {
+  font-weight: 600;
+  color: #161c20;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-read .ld-fg-log-reason-text {
+  color: #717881;
+}
+.ld-fg-admin-wrap .ld-fg-logs-table .ld-fg-log-row.is-unread .ld-fg-log-view {
+  color: #005891;
+}
+
 .ld-fg-admin-avatar {
   width: 28px !important;
   height: 28px !important;
@@ -386,6 +521,29 @@ body.ld-fg-screen #wpbody-content > .ld-fg-wrap {
 }
 .ld-fg-drawer.is-open {
   transform: translateX(0);
+}
+
+.ld-fg-admin-wrap .ld-fg-drawer-close-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #717881;
+  cursor: pointer;
+  line-height: 1;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.ld-fg-admin-wrap .ld-fg-drawer-close-icon:hover,
+.ld-fg-admin-wrap .ld-fg-drawer-close-icon:focus-visible {
+  background: #e9eef4;
+  color: #161c20;
+  outline: none;
 }
 
 @media screen and (max-width: 782px) {

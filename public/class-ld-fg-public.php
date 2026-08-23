@@ -89,6 +89,9 @@ final class LD_FG_Frontend {
 		// Ninja Forms — markup after open tag when available; JS covers AJAX payload.
 		add_action( 'ninja_forms_display_after_open_form_tag', array( $this, 'inject_ninja' ), 10, 1 );
 		add_action( 'ninja_forms_display_after_fields', array( $this, 'inject_ninja' ), 10, 1 );
+
+		// WordPress Core comments.
+		add_action( 'comment_form_after_fields', array( $this, 'inject_comment' ), 20 );
 	}
 
 	/**
@@ -105,7 +108,9 @@ final class LD_FG_Frontend {
 		$active   = $plugin->get_available_adapters();
 		$settings = LD_FG_Settings::get();
 
-		if ( empty( $active ) ) {
+		$core_comments = ! empty( $settings['enabled'] ) && ! empty( $settings['protect_core_comments'] );
+
+		if ( empty( $active ) && ! $core_comments ) {
 			return;
 		}
 
@@ -135,6 +140,10 @@ final class LD_FG_Frontend {
 				continue;
 			}
 			$protected[ (string) $slug ] = array( '*' );
+		}
+
+		if ( $core_comments ) {
+			$protected['core'] = array( 'comment' );
 		}
 
 		if ( empty( $protected ) ) {
@@ -323,6 +332,21 @@ final class LD_FG_Frontend {
 		$this->maybe_enqueue_assets();
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fields_html escapes.
 		echo $this->fields_html( 'ninja', $form_id );
+	}
+
+	/**
+	 * WordPress Core: inject trap fields on comment forms.
+	 *
+	 * @return void
+	 */
+	public function inject_comment(): void {
+		if ( ! LD_FG_Settings::is_form_protected( 'core', 'comment' ) ) {
+			return;
+		}
+
+		$this->maybe_enqueue_assets();
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fields_html escapes.
+		echo $this->fields_html( 'core', 'comment' );
 	}
 
 	/**

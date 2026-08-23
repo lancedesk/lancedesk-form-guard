@@ -17,6 +17,7 @@ $enabled           = ! empty( $ld_fg_settings['enabled'] );
 $retention         = (int) ( $ld_fg_settings['retention_days'] ?? 90 );
 $delete_uninstall  = ! empty( $ld_fg_settings['delete_on_uninstall'] );
 $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
+$protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 ?>
 <div class="flex flex-col w-full">
 <div class="flex justify-between items-center mb-6">
@@ -64,6 +65,27 @@ $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 <label class="font-label-md text-label-md text-on-surface cursor-pointer select-none" for="ld-fg-delete-on-uninstall"><?php esc_html_e( 'Delete logs on uninstall', 'lancedesk-form-guard' ); ?></label>
 <p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5"><?php esc_html_e( 'Remove all stored data when removing the plugin from this site.', 'lancedesk-form-guard' ); ?></p>
 </div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md">
+<div class="px-margin-lg py-margin-md border-b border-outline-variant/50 bg-surface-container-lowest flex items-center justify-between">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface"><?php esc_html_e( 'WordPress Core', 'lancedesk-form-guard' ); ?></h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'Protect built-in WordPress forms without a third-party plugin.', 'lancedesk-form-guard' ); ?></p>
+</div>
+<span class="ld-fg-icon material-symbols-outlined text-outline-variant text-[28px]" style="font-variation-settings: 'FILL' 1;">forum</span>
+</div>
+<div class="p-margin-lg">
+<div class="flex items-start justify-between p-margin-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div class="flex-1 pr-margin-md">
+<label class="font-headline-lg text-[18px] leading-tight text-on-surface cursor-pointer select-none" for="ld-fg-protect-comments"><?php esc_html_e( 'Protect WordPress comment forms', 'lancedesk-form-guard' ); ?></label>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'Runs the same heuristics (and optional AI) on post comments before they are published. Uses your Protection default action — spam bucket, moderation hold, or soft block.', 'lancedesk-form-guard' ); ?></p>
+</div>
+<label class="relative inline-flex items-center h-6 mt-1 cursor-pointer" for="ld-fg-protect-comments">
+<input class="sr-only peer" id="ld-fg-protect-comments" name="protect_core_comments" type="checkbox" value="1" <?php checked( $protect_comments ); ?> />
+<div class="relative w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary pointer-events-none" aria-hidden="true"></div>
+</label>
 </div>
 </div>
 </div>

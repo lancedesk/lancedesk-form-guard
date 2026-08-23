@@ -9,6 +9,7 @@
  * @var string              $ld_fg_partial   Content partial path.
  * @var array<string,mixed> $ld_fg_settings  Plugin settings.
  * @var bool                $ld_fg_enabled   Whether protection is enabled.
+ * @var int                 $ld_fg_logs_unread Unread security log count for current user.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -42,6 +43,21 @@ if ( '' !== $ld_fg_notices ) {
 					<span class="ld-fg-nav-link__label"><?php echo esc_html( (string) $item['label'] ); ?></span>
 					<?php if ( 'dashboard' === $key && $ld_fg_enabled ) : ?>
 						<span class="ld-fg-nav-link__badge"><?php esc_html_e( 'ON', 'lancedesk-form-guard' ); ?></span>
+					<?php endif; ?>
+					<?php if ( 'logs' === $key ) : ?>
+						<?php
+						$ld_fg_unread_label = $ld_fg_logs_unread > 99 ? '99+' : (string) $ld_fg_logs_unread;
+						$ld_fg_unread_aria  = sprintf(
+							/* translators: %d: unread log entry count. */
+							_n( '%d unread log entry', '%d unread log entries', $ld_fg_logs_unread, 'lancedesk-form-guard' ),
+							$ld_fg_logs_unread
+						);
+						?>
+						<span
+							id="ld-fg-logs-unread-badge"
+							class="ld-fg-nav-link__badge ld-fg-nav-link__badge--count<?php echo $ld_fg_logs_unread > 0 ? '' : ' hidden'; ?>"
+							aria-label="<?php echo esc_attr( $ld_fg_unread_aria ); ?>"
+						><?php echo esc_html( $ld_fg_unread_label ); ?></span>
 					<?php endif; ?>
 				</a>
 			<?php endforeach; ?>

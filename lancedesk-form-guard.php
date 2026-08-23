@@ -2,14 +2,14 @@
 /**
  * Plugin Name:       LanceDesk Form Guard
  * Plugin URI:        https://github.com/lancedesk/lancedesk-form-guard
- * Description:       Protects contact form submissions with local heuristics and optional AI classification before notification emails are sent.
- * Version:           0.1.2
+ * Description:       Protects contact forms and WordPress comments with heuristics and optional AI before emails send or comments are saved.
+ * Version:           0.1.3
  * Author:            Lance Desk
  * Author URI:        https://lancedesk.com
  * Text Domain:       lancedesk-form-guard
  * Domain Path:       /languages
  * Requires at least: 6.4
- * Tested up to:      7.0
+ * Tested up to:      7.1
  * Requires PHP:      8.0
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LD_FG_VERSION', '0.1.2' );
+define( 'LD_FG_VERSION', '0.1.3' );
 define( 'LD_FG_PLUGIN_FILE', __FILE__ );
 define( 'LD_FG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LD_FG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -98,6 +98,7 @@ require_once LD_FG_PLUGIN_DIR . 'includes/class-ld-fg-db.php';
 require_once LD_FG_PLUGIN_DIR . 'includes/class-ld-fg-activator.php';
 
 register_activation_hook( __FILE__, array( 'LD_FG_Activator', 'activate' ) );
+add_action( 'plugins_loaded', array( 'LD_FG_DB', 'maybe_upgrade' ), 5 );
 
 /**
  * Initialize the plugin after all plugins are loaded.
