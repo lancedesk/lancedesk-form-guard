@@ -57,14 +57,15 @@ $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 </div>
 <p class="font-body-sm text-body-sm text-on-surface-variant"><?php esc_html_e( 'Duration to keep security logs before automatic deletion.', 'lancedesk-form-guard' ); ?></p>
 </div>
-<div class="flex items-start mt-margin-md">
-<div class="flex items-center h-5">
-<input class="w-4 h-4 text-primary bg-surface-container-lowest border-outline-variant rounded focus:ring-primary/20 focus:ring-2 cursor-pointer transition-colors" id="ld-fg-delete-on-uninstall" name="delete_on_uninstall" type="checkbox" value="1" <?php checked( $delete_uninstall ); ?> />
+<div class="flex items-start justify-between p-margin-md bg-surface-container-low rounded-lg border border-outline-variant/30 mt-margin-md">
+<div class="flex-1 pr-margin-md">
+<label class="font-headline-lg text-[18px] leading-tight text-on-surface cursor-pointer select-none" for="ld-fg-delete-on-uninstall"><?php esc_html_e( 'Delete logs on uninstall', 'lancedesk-form-guard' ); ?></label>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'Remove all stored data when removing the plugin from this site.', 'lancedesk-form-guard' ); ?></p>
 </div>
-<div class="ml-3 text-sm">
-<label class="font-label-md text-label-md text-on-surface cursor-pointer select-none" for="ld-fg-delete-on-uninstall"><?php esc_html_e( 'Delete logs on uninstall', 'lancedesk-form-guard' ); ?></label>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5"><?php esc_html_e( 'Remove all stored data when removing the plugin from this site.', 'lancedesk-form-guard' ); ?></p>
-</div>
+<label class="relative inline-flex items-center h-6 mt-1 cursor-pointer" for="ld-fg-delete-on-uninstall">
+<input class="sr-only peer" id="ld-fg-delete-on-uninstall" name="delete_on_uninstall" type="checkbox" value="1" <?php checked( $delete_uninstall ); ?> />
+<div class="relative w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary pointer-events-none" aria-hidden="true"></div>
+</label>
 </div>
 </div>
 </div>
@@ -100,13 +101,14 @@ $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 <div class="p-margin-md bg-secondary-container/20 rounded-lg border border-secondary-container/50">
 <h3 class="font-label-md text-label-md text-on-surface mb-unit"><?php esc_html_e( 'AI Processing Acknowledgement', 'lancedesk-form-guard' ); ?></h3>
 <p class="font-body-sm text-body-sm text-on-surface-variant mb-margin-sm leading-relaxed"><?php esc_html_e( 'By enabling form protection, submission data may be securely transmitted to configured AI providers for spam analysis. Only necessary form fields are processed. We recommend reviewing your privacy policy to ensure compliance with local data regulations regarding third-party processing.', 'lancedesk-form-guard' ); ?></p>
-<div class="flex items-start mt-4 pt-4 border-t border-secondary-container/30">
-<div class="flex items-center h-5">
-<input class="w-4 h-4 text-primary bg-surface-container-lowest border-outline-variant rounded focus:ring-primary/20 focus:ring-2 cursor-pointer transition-colors" id="ld-fg-privacy-ack" name="privacy_ack" type="checkbox" value="1" <?php checked( $privacy_ack ); ?> />
-</div>
-<div class="ml-3 text-sm">
+<div class="flex items-start justify-between mt-4 pt-4 border-t border-secondary-container/30 gap-margin-md">
+<div class="flex-1 pr-margin-md">
 <label class="font-label-md text-label-md text-on-surface cursor-pointer select-none" for="ld-fg-privacy-ack"><?php esc_html_e( 'I acknowledge that submission data will be processed by external AI providers.', 'lancedesk-form-guard' ); ?></label>
 </div>
+<label class="relative inline-flex items-center h-6 mt-0.5 shrink-0 cursor-pointer" for="ld-fg-privacy-ack">
+<input class="sr-only peer" id="ld-fg-privacy-ack" name="privacy_ack" type="checkbox" value="1" <?php checked( $privacy_ack ); ?> />
+<div class="relative w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary pointer-events-none" aria-hidden="true"></div>
+</label>
 </div>
 </div>
 </div>
