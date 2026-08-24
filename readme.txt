@@ -4,7 +4,7 @@ Tags: spam, forms, security, ai, antispam
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,11 @@ This plugin optionally connects to third-party AI APIs to classify form submissi
 7. Log detail drawer with integration, layer, provider, confidence, reason, and captured fields.
 
 == Changelog ==
+
+= 0.1.5 =
+* Admin UX: hide Logs search and Forms filter/search when there are fewer than 20 items.
+* Integrations intro text uses full content width.
+* Providers: Save Key stays disabled until an API key is entered.
 
 = 0.1.4 =
 * Layer 1 catches soft content-collaboration and link-opportunity outreach (e.g. “came across your website”, “link opportunities”, “both audiences”).

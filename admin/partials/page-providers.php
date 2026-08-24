@@ -89,7 +89,7 @@ echo esc_html( sprintf( __( 'Priority %d', 'lancedesk-form-guard' ), $priority )
 <?php esc_html_e( 'Test Connection', 'lancedesk-form-guard' ); ?>
 </button>
 <?php else : ?>
-<button type="button" class="ld-fg-save-provider-key bg-primary text-on-primary text-body-sm font-body-sm py-1.5 px-4 rounded-lg shadow-sm hover:bg-primary/90 transition-colors" data-provider="<?php echo esc_attr( $pid ); ?>">
+<button type="button" class="ld-fg-save-provider-key bg-primary text-on-primary text-body-sm font-body-sm py-1.5 px-4 rounded-lg shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:pointer-events-none" data-provider="<?php echo esc_attr( $pid ); ?>" disabled>
 <?php esc_html_e( 'Save Key', 'lancedesk-form-guard' ); ?>
 </button>
 <?php endif; ?>

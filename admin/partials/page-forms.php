@@ -57,6 +57,7 @@ endif;
 <p class="font-body-sm text-body-sm text-on-surface-variant max-w-2xl mb-4"><?php esc_html_e( 'WordPress post comments are protected site-wide. Enable or disable that under Settings → WordPress Core.', 'lancedesk-form-guard' ); ?> <a class="text-primary hover:underline" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-settings' ) ); ?>"><?php esc_html_e( 'Open Settings', 'lancedesk-form-guard' ); ?></a></p>
 <?php endif; ?>
 <div class="bg-surface-container-lowest shadow-sm rounded-lg flex flex-col">
+<?php if ( count( $all_forms ) >= 20 ) : ?>
 <div class="p-margin-lg bg-surface flex flex-col md:flex-row gap-4 justify-between items-start md:items-center rounded-t-lg">
 <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
 <div class="relative">
@@ -76,6 +77,7 @@ endif;
 </div>
 </div>
 </div>
+<?php endif; ?>
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead>

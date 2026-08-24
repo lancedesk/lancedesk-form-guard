@@ -33,6 +33,7 @@ if ( ! empty( $logs ) ) {
 <div class="flex items-center justify-between mb-6">
 <h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Security Logs', 'lancedesk-form-guard' ); ?></h1>
 </div>
+<?php if ( $total >= 20 ) : ?>
 <div class="bg-surface-container rounded-xl shadow-sm mb-margin-lg p-margin-md flex flex-wrap items-end gap-margin-md">
 <div class="flex-1 min-w-[200px]">
 <label class="block font-label-md text-label-md text-on-surface-variant mb-unit"><?php esc_html_e( 'Search', 'lancedesk-form-guard' ); ?></label>
@@ -42,6 +43,7 @@ if ( ! empty( $logs ) ) {
 </div>
 </div>
 </div>
+<?php endif; ?>
 <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
 <div class="ld-fg-logs-table-wrap">
 <table class="text-left border-collapse ld-fg-logs-table">

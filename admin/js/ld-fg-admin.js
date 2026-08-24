@@ -102,21 +102,52 @@
 		});
 	});
 
-	// Save provider key
+	// Save provider key — enabled only when the API key field has a value.
+	document.querySelectorAll('.ld-fg-provider-card').forEach(function (card) {
+		var keyInput = card.querySelector('.ld-fg-provider-api-key');
+		var saveBtn = card.querySelector('.ld-fg-save-provider-key');
+		if (!keyInput || !saveBtn) {
+			return;
+		}
+
+		function syncSaveKeyState() {
+			var hasValue = String(keyInput.value || '').trim().length > 0;
+			saveBtn.disabled = !hasValue;
+		}
+
+		['input', 'change', 'paste', 'keyup'].forEach(function (evt) {
+			keyInput.addEventListener(evt, function () {
+				// Paste populates value after the event in some browsers.
+				window.setTimeout(syncSaveKeyState, 0);
+			});
+		});
+		syncSaveKeyState();
+	});
+
 	document.querySelectorAll('.ld-fg-save-provider-key').forEach(function (btn) {
 		btn.addEventListener('click', function () {
+			if (btn.disabled) {
+				return;
+			}
 			var card = btn.closest('.ld-fg-provider-card');
 			var provider = btn.getAttribute('data-provider');
 			var keyInput = card ? card.querySelector('.ld-fg-provider-api-key') : null;
 			var modelSelect = card ? card.querySelector('.ld-fg-provider-model') : null;
+			var apiKey = keyInput ? String(keyInput.value || '').trim() : '';
+			if (!apiKey) {
+				return;
+			}
 			var settings = { providers: {} };
 			settings.providers[provider] = {
 				enabled: 1,
-				api_key: keyInput ? keyInput.value : '',
+				api_key: apiKey,
 				model: modelSelect ? modelSelect.value : ''
 			};
+			btn.disabled = true;
 			post('ld_fg_save_settings', { settings: JSON.stringify(settings) }).then(function () {
 				window.location.reload();
+			}).fail(function () {
+				btn.disabled = false;
 			});
 		});
 	});
