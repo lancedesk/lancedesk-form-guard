@@ -59,8 +59,8 @@ $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 </div>
 <div class="flex items-start justify-between p-margin-md bg-surface-container-low rounded-lg border border-outline-variant/30 mt-margin-md">
 <div class="flex-1 pr-margin-md">
-<label class="font-headline-lg text-[18px] leading-tight text-on-surface cursor-pointer select-none" for="ld-fg-delete-on-uninstall"><?php esc_html_e( 'Delete logs on uninstall', 'lancedesk-form-guard' ); ?></label>
-<p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'Remove all stored data when removing the plugin from this site.', 'lancedesk-form-guard' ); ?></p>
+<label class="font-headline-lg text-[18px] leading-tight text-on-surface cursor-pointer select-none" for="ld-fg-delete-on-uninstall"><?php esc_html_e( 'Delete all plugin data on uninstall', 'lancedesk-form-guard' ); ?></label>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'Off by default so settings, API keys, and security logs are kept if you remove the plugin. Turn on only for a full clean removal.', 'lancedesk-form-guard' ); ?></p>
 </div>
 <label class="relative inline-flex items-center h-6 mt-1 cursor-pointer" for="ld-fg-delete-on-uninstall">
 <input class="sr-only peer" id="ld-fg-delete-on-uninstall" name="delete_on_uninstall" type="checkbox" value="1" <?php checked( $delete_uninstall ); ?> />

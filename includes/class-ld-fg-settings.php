@@ -28,7 +28,7 @@ final class LD_FG_Settings {
 		return array(
 			'enabled'               => 0,
 			'retention_days'        => 90,
-			'delete_on_uninstall'   => 1,
+			'delete_on_uninstall'   => 0,
 			'privacy_ack'           => 0,
 			'default_action'        => 'silent_discard',
 			'ai_fail_mode'          => 'fail_open',
