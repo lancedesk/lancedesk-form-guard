@@ -138,6 +138,13 @@ $ld_fg_samples = array(
 		),
 	),
 	array(
+		'label'   => 'Soft content collaboration / link opportunity pitch',
+		'expect'  => 'block',
+		'fields'  => array(
+			'message' => 'I recently came across your website and wanted to get in touch about a possible content collaboration. We’re currently connecting with relevant websites and exploring opportunities that could be useful for both audiences.We also have a few established websites available for relevant content or link opportunities. Happy to share some examples if this is of interest.',
+		),
+	),
+	array(
 		'label'   => 'Legitimate church inquiry',
 		'expect'  => 'allow',
 		'fields'  => array(

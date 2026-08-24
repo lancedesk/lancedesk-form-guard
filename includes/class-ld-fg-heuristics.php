@@ -54,6 +54,18 @@ final class LD_FG_Heuristics {
 			'ow.ly',
 			'rb.gy',
 			'imgur.',
+			'.monster',
+			'.casino',
+			'.onion',
+			'graph.org',
+			'dseo24.',
+			'blacksprut',
+			'bs2best.',
+			'bs2web.',
+			'blsp.at',
+			'bchgames.',
+			'bch-games.',
+			'bch-casino.',
 		);
 		// phpcs:enable PluginCheck.CodeAnalysis.Offloading.OffloadedContent
 	}
@@ -309,9 +321,73 @@ final class LD_FG_Heuristics {
 			'free consultation'                  => array( 2, 'consultation pitch' ),
 			'guest post'                         => array( 3, 'guest post pitch' ),
 			'link building'                      => array( 3, 'link building pitch' ),
-			'we noticed your website'          => array( 2, 'website pitch' ),
+			'we noticed your website'            => array( 2, 'website pitch' ),
 			'seo services'                       => array( 2, 'SEO services pitch' ),
 			'rank better on google'              => array( 2, 'rank pitch' ),
+			// Soft collaboration / link-exchange outreach.
+			'came across your website'           => array( 2, 'website outreach' ),
+			'content collaboration'              => array( 3, 'content collaboration' ),
+			'link opportunit'                    => array( 3, 'link opportunity pitch' ),
+			'link exchange'                      => array( 3, 'link exchange pitch' ),
+			'both audiences'                     => array( 2, 'mutual audience pitch' ),
+			'relevant websites'                  => array( 2, 'relevant websites pitch' ),
+			'established websites'               => array( 2, 'site inventory pitch' ),
+			'exploring opportunities'            => array( 1, 'opportunity pitch' ),
+			'get in touch about'                 => array( 1, 'outreach CTA' ),
+			'backlink'                           => array( 3, 'backlink pitch' ),
+			'backlink collaboration'             => array( 3, 'backlink collaboration' ),
+			'sponsored post'                     => array( 3, 'sponsored post pitch' ),
+			'sponsored content'                  => array( 3, 'sponsored content pitch' ),
+			'guest blogging'                     => array( 3, 'guest blogging pitch' ),
+			'write for us'                       => array( 2, 'write-for-us pitch' ),
+			// Soft SEO proposal pitches (corpus #1 / #5).
+			'looking over your website'          => array( 2, 'website review pitch' ),
+			'google rankings'                    => array( 2, 'Google rankings pitch' ),
+			'seo strategy'                       => array( 3, 'SEO strategy pitch' ),
+			'organic growth'                     => array( 2, 'organic growth pitch' ),
+			'pricing proposal'                   => array( 2, 'pricing proposal' ),
+			'higher-quality leads'               => array( 2, 'leads pitch' ),
+			'higher quality leads'               => array( 2, 'leads pitch' ),
+			'would you be open to reviewing'     => array( 2, 'review CTA' ),
+			'thought you might be a good fit'    => array( 2, 'fit pitch' ),
+			'no payment needed'                  => array( 2, 'free link pitch' ),
+			'client sites'                       => array( 1, 'client sites pitch' ),
+			'dr30'                               => array( 2, 'DR metrics pitch' ),
+			// SEO tooling spam (Xrumer / GSA).
+			'xrumer'                             => array( 3, 'Xrumer spam tool' ),
+			'gsa search engine'                  => array( 3, 'GSA Ranker pitch' ),
+			'search engine ranker'               => array( 3, 'SER spam tool' ),
+			// Crypto / token credit scams.
+			'tokens credited'                    => array( 3, 'token credit scam' ),
+			'credited automatically to your balance' => array( 3, 'balance credit scam' ),
+			'usd receive'                        => array( 2, 'USD receive scam' ),
+			'pxqr'                               => array( 3, 'obfuscated token marker' ),
+			// Darknet / mirror spam.
+			'.onion'                             => array( 3, 'onion address' ),
+			'даркнет'                            => array( 3, 'darknet pitch' ),
+			'черный рынок'                       => array( 3, 'black market pitch' ),
+			'фальшивых документов'               => array( 3, 'fake documents pitch' ),
+			'кракен'                             => array( 2, 'Kraken darknet' ),
+			'blacksprut'                         => array( 3, 'BlackSprut mirror' ),
+			// Russian SEO spam (tehosmotr / inspection linkbait).
+			'техосмотр'                          => array( 3, 'tehosmotr SEO spam' ),
+			'еаисто'                             => array( 3, 'EAISTO SEO spam' ),
+			'диагностическ'                      => array( 2, 'diagnostic card spam' ),
+			'мрэо'                               => array( 2, 'MREO SEO spam' ),
+			'постановки на учёт'                 => array( 2, 'registration SEO spam' ),
+			'постановки на учет'                 => array( 2, 'registration SEO spam' ),
+			// Misc commercial / product dump spam.
+			'geltaxi'                            => array( 3, 'GelTaxi spam' ),
+			'facade glazing'                     => array( 2, 'facade pitch' ),
+			'translucent structures'             => array( 3, 'translucent structures pitch' ),
+			'curtain wall'                       => array( 2, 'curtain wall pitch' ),
+			'smartal'                            => array( 3, 'SMARTAL pitch' ),
+			'wechselrichter'                     => array( 3, 'inverter product spam' ),
+			'solar dieburg'                      => array( 3, 'solar product spam' ),
+			'азартных игр'                       => array( 3, 'gambling pitch' ),
+			'bc game'                            => array( 2, 'BC Game pitch' ),
+			'онлайн-гемблинга'                   => array( 3, 'gambling pitch' ),
+			'онлайн-гейминга'                    => array( 2, 'gaming pitch' ),
 		);
 
 		foreach ( $patterns as $needle => $meta ) {
@@ -321,9 +397,29 @@ final class LD_FG_Heuristics {
 			}
 		}
 
-		// Combo boost: sales CTA + SEO/marketing vocabulary.
-		$has_seo_vocab = ( false !== strpos( $haystack, 'seo' ) || false !== strpos( $haystack, 'ranking' ) || false !== strpos( $haystack, 'keywords' ) );
-		$has_sales_cta = ( false !== strpos( $haystack, 'reply' ) || false !== strpos( $haystack, 'let’s discuss' ) || false !== strpos( $haystack, "let's discuss" ) || false !== strpos( $haystack, 'contact us' ) );
+		// Combo boost: sales CTA + SEO/marketing or link-building vocabulary.
+		$has_seo_vocab = (
+			false !== strpos( $haystack, 'seo' )
+			|| false !== strpos( $haystack, 'ranking' )
+			|| false !== strpos( $haystack, 'keywords' )
+			|| false !== strpos( $haystack, 'backlink' )
+			|| false !== strpos( $haystack, 'link opportunit' )
+			|| false !== strpos( $haystack, 'content collaboration' )
+			|| false !== strpos( $haystack, 'organic growth' )
+			|| false !== strpos( $haystack, 'google rankings' )
+		);
+		$has_sales_cta = (
+			false !== strpos( $haystack, 'reply' )
+			|| false !== strpos( $haystack, 'let’s discuss' )
+			|| false !== strpos( $haystack, "let's discuss" )
+			|| false !== strpos( $haystack, 'contact us' )
+			|| false !== strpos( $haystack, 'get in touch' )
+			|| false !== strpos( $haystack, 'if this is of interest' )
+			|| false !== strpos( $haystack, 'happy to share' )
+			|| false !== strpos( $haystack, 'would you be open' )
+			|| false !== strpos( $haystack, 'let me know if' )
+			|| false !== strpos( $haystack, 'thought you might' )
+		);
 
 		if ( $has_seo_vocab && $has_sales_cta ) {
 			$score += 2;

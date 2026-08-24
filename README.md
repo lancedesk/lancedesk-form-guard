@@ -3,7 +3,7 @@
 WordPress plugin that protects **contact form submissions** and **WordPress post comments** with local heuristics and optional AI classification — before notification emails are sent or comments are saved.
 
 **Repository:** https://github.com/lancedesk/lancedesk-form-guard  
-**Current version:** 0.1.3  
+**Current version:** 0.1.4  
 **Requires:** WordPress 6.4+, PHP 8.0+
 
 ## What it does
@@ -68,6 +68,13 @@ php tools/spam-sample-check.php   # Layer 1 sample regression (dev tree only; ex
 Run **Plugin Check** against the release zip, not the full dev tree (`tools/`, `docs/`, and `node_modules/` are excluded from the zip).
 
 ## Changelog
+
+### 0.1.4
+
+- Soft collaboration / link-opportunity outreach patterns in Layer 1
+- Corpus hardening: soft SEO proposals, backlink swaps, Xrumer/GSA, token scams, Russian tehosmotr/darknet/gambling SEO, product dumps
+- Settings: delete-on-uninstall and privacy ack use pill toggles
+- Dev: `php tools/corpus-spam-check.php` for the real-world spam corpus
 
 ### 0.1.3
 
