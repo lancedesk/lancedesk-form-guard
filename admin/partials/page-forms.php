@@ -54,7 +54,7 @@ endif;
 <h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Forms', 'lancedesk-form-guard' ); ?></h1>
 </div>
 <?php if ( $protect_core_comments ) : ?>
-<p class="font-body-sm text-body-sm text-on-surface-variant max-w-2xl mb-4"><?php esc_html_e( 'WordPress post comments are protected site-wide. Enable or disable that under Settings → WordPress Core.', 'lancedesk-form-guard' ); ?> <a class="text-primary hover:underline" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-settings' ) ); ?>"><?php esc_html_e( 'Open Settings', 'lancedesk-form-guard' ); ?></a></p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4"><?php esc_html_e( 'WordPress post comments are protected site-wide. Enable or disable that under Settings → WordPress Core.', 'lancedesk-form-guard' ); ?> <a class="text-primary hover:underline whitespace-nowrap" href="<?php echo esc_url( admin_url( 'admin.php?page=ld-fg-settings' ) ); ?>"><?php esc_html_e( 'Open Settings', 'lancedesk-form-guard' ); ?></a></p>
 <?php endif; ?>
 <div class="bg-surface-container-lowest shadow-sm rounded-lg flex flex-col">
 <?php if ( count( $all_forms ) >= 20 ) : ?>
