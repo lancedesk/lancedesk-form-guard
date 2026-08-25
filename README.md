@@ -3,7 +3,7 @@
 WordPress plugin that protects **contact form submissions** and **WordPress post comments** with local heuristics and optional AI classification — before notification emails are sent or comments are saved.
 
 **Repository:** https://github.com/lancedesk/lancedesk-form-guard  
-**Current version:** 0.1.6  
+**Current version:** 0.1.8  
 **Requires:** WordPress 6.4+, PHP 8.0+
 
 ## What it does
@@ -68,6 +68,16 @@ php tools/spam-sample-check.php   # Layer 1 sample regression (dev tree only; ex
 Run **Plugin Check** against the release zip, not the full dev tree (`tools/`, `docs/`, and `node_modules/` are excluded from the zip).
 
 ## Changelog
+
+### 0.1.8
+
+- Settings and Protection Save buttons disabled until the form is dirty
+
+### 0.1.7
+
+- Quform: logs use the form display name (`config('name')`), not the numeric id
+- Quform: always merge flattened `quform_*` POST with form values so message text is never skipped
+- Quform: silent discard short-circuits before entry save
 
 ### 0.1.6
 

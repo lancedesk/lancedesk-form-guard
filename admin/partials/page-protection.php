@@ -24,7 +24,7 @@ $block_pct      = (int) round( (float) ( $ld_fg_settings['confidence_block'] ?? 
 <div class="flex flex-col w-full ld-fg-protection-page">
 <div class="flex justify-between items-center gap-4 mb-6">
 <h1 class="font-headline-lg text-headline-lg text-on-surface m-0"><?php esc_html_e( 'Protection Rules', 'lancedesk-form-guard' ); ?></h1>
-<button type="button" class="ld-fg-save-protection bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md px-6 py-3 rounded-lg flex items-center gap-2 transition-colors shadow-sm whitespace-nowrap">
+<button type="button" class="ld-fg-save-protection bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md px-6 py-3 rounded-lg flex items-center gap-2 transition-colors shadow-sm whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:pointer-events-none" disabled aria-disabled="true">
 <span class="ld-fg-icon material-symbols-outlined text-[18px]">save</span>
 <?php esc_html_e( 'Save Changes', 'lancedesk-form-guard' ); ?>
 </button>

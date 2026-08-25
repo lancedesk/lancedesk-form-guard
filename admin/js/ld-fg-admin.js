@@ -32,6 +32,63 @@
 		window.setTimeout(function () { $bar.fadeOut(200); }, 3200);
 	}
 
+	/**
+	 * Snapshot form field state for dirty checking.
+	 *
+	 * @param {HTMLFormElement} form Form element.
+	 * @return {string}
+	 */
+	function snapshotForm(form) {
+		var parts = [];
+		form.querySelectorAll('input, select, textarea').forEach(function (el) {
+			var name = el.name || el.id || '';
+			if (!name || el.disabled) {
+				return;
+			}
+			if (el.type === 'checkbox' || el.type === 'radio') {
+				parts.push(name + ':' + (el.value || 'on') + '=' + (el.checked ? '1' : '0'));
+				return;
+			}
+			parts.push(name + '=' + String(el.value || ''));
+		});
+		parts.sort();
+		return parts.join('\n');
+	}
+
+	/**
+	 * Disable a save button until the watched form differs from its baseline.
+	 *
+	 * @param {HTMLFormElement} form    Form to watch.
+	 * @param {HTMLButtonElement} saveBtn Save button.
+	 * @return {{ isDirty: function(): boolean, markClean: function(): void, sync: function(): void }}
+	 */
+	function bindDirtySave(form, saveBtn) {
+		var baseline = snapshotForm(form);
+
+		function sync() {
+			var dirty = snapshotForm(form) !== baseline;
+			saveBtn.disabled = !dirty;
+			saveBtn.setAttribute('aria-disabled', dirty ? 'false' : 'true');
+		}
+
+		['input', 'change'].forEach(function (evt) {
+			form.addEventListener(evt, sync);
+		});
+
+		sync();
+
+		return {
+			isDirty: function () {
+				return snapshotForm(form) !== baseline;
+			},
+			markClean: function () {
+				baseline = snapshotForm(form);
+				sync();
+			},
+			sync: sync
+		};
+	}
+
 	// Toggle form protection — save immediately via admin-ajax.
 	$(document).on('change', '.ld-fg-toggle-form', function () {
 		var $input = $(this);
@@ -432,9 +489,15 @@
 
 	// Settings form
 	var settingsForm = document.getElementById('ld-fg-settings-form');
-	if (settingsForm) {
+	var settingsSaveBtn = document.getElementById('ld-fg-save-btn');
+	var settingsDirty = null;
+	if (settingsForm && settingsSaveBtn) {
+		settingsDirty = bindDirtySave(settingsForm, settingsSaveBtn);
 		settingsForm.addEventListener('submit', function (e) {
 			e.preventDefault();
+			if (!settingsDirty.isDirty()) {
+				return;
+			}
 			if (!settingsForm.checkValidity()) {
 				settingsForm.reportValidity();
 				return;
@@ -446,19 +509,24 @@
 				privacy_ack: document.getElementById('ld-fg-privacy-ack') && document.getElementById('ld-fg-privacy-ack').checked ? 1 : 0,
 				protect_core_comments: document.getElementById('ld-fg-protect-comments') && document.getElementById('ld-fg-protect-comments').checked ? 1 : 0
 			};
-			var saveBtn = document.getElementById('ld-fg-save-btn');
 			var status = document.getElementById('ld-fg-save-status');
-			if (saveBtn) saveBtn.disabled = true;
+			settingsSaveBtn.disabled = true;
 			post('ld_fg_save_settings', { settings: JSON.stringify(settings) }).then(function (payload) {
-				if (saveBtn) saveBtn.disabled = false;
-				if (status && payload.success) {
-					status.classList.remove('opacity-0');
-					status.classList.add('opacity-100');
-					setTimeout(function () {
-						status.classList.remove('opacity-100');
-						status.classList.add('opacity-0');
-					}, 3000);
+				if (payload && payload.success) {
+					settingsDirty.markClean();
+					if (status) {
+						status.classList.remove('opacity-0');
+						status.classList.add('opacity-100');
+						setTimeout(function () {
+							status.classList.remove('opacity-100');
+							status.classList.add('opacity-0');
+						}, 3000);
+					}
+					return;
 				}
+				settingsDirty.sync();
+			}).fail(function () {
+				settingsDirty.sync();
 			});
 		});
 	}
@@ -466,8 +534,13 @@
 	// Protection page save
 	var protectionSave = document.querySelector('.ld-fg-save-protection');
 	var protectionForm = document.getElementById('ld-fg-protection-form');
+	var protectionDirty = null;
 	if (protectionSave && protectionForm) {
+		protectionDirty = bindDirtySave(protectionForm, protectionSave);
 		protectionSave.addEventListener('click', function () {
+			if (!protectionDirty.isDirty() || protectionSave.disabled) {
+				return;
+			}
 			var settings = {};
 			var actionRadio = protectionForm.querySelector('input[name="default_action"]:checked');
 			var failRadio = protectionForm.querySelector('input[name="ai_fail_mode"]:checked');
@@ -481,9 +554,20 @@
 			});
 			var range = protectionForm.querySelector('.ld-fg-confidence-block');
 			if (range) settings.confidence_block = parseInt(range.value, 10) / 100;
-			post('ld_fg_save_settings', { settings: JSON.stringify(settings) }).then(function () {
-				protectionSave.textContent = 'Saved';
-				setTimeout(function () { protectionSave.innerHTML = '<span class="ld-fg-icon material-symbols-outlined text-[18px]">save</span> Save Changes'; }, 2000);
+			protectionSave.disabled = true;
+			post('ld_fg_save_settings', { settings: JSON.stringify(settings) }).then(function (payload) {
+				if (payload && payload.success === false) {
+					protectionDirty.sync();
+					return;
+				}
+				protectionDirty.markClean();
+				protectionSave.innerHTML = '<span class="ld-fg-icon material-symbols-outlined text-[18px]">check</span> Saved';
+				setTimeout(function () {
+					protectionSave.innerHTML = '<span class="ld-fg-icon material-symbols-outlined text-[18px]">save</span> Save Changes';
+					protectionDirty.sync();
+				}, 2000);
+			}).fail(function () {
+				protectionDirty.sync();
 			});
 		});
 

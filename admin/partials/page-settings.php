@@ -118,7 +118,7 @@ $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 <span class="ld-fg-icon material-symbols-outlined text-[16px]">check_circle</span>
 <?php esc_html_e( 'Settings saved successfully', 'lancedesk-form-guard' ); ?>
 </div>
-<button class="px-6 py-2 font-label-md text-label-md text-on-primary bg-primary hover:bg-on-primary-fixed-variant rounded-lg shadow-sm hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface flex items-center gap-2 group" id="ld-fg-save-btn" type="submit">
+<button class="px-6 py-2 font-label-md text-label-md text-on-primary bg-primary hover:bg-on-primary-fixed-variant rounded-lg shadow-sm hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface flex items-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:shadow-sm disabled:pointer-events-none" id="ld-fg-save-btn" type="submit" disabled aria-disabled="true">
 <span><?php esc_html_e( 'Save Settings', 'lancedesk-form-guard' ); ?></span>
 <span class="ld-fg-icon material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">save</span>
 </button>
