@@ -30,6 +30,11 @@ final class LD_FG_Heuristics {
 	public const COMMERCIAL_SCORE_THRESHOLD = 3;
 
 	/**
+	 * Minimum number of gibberish-looking text fields to treat as bot spam.
+	 */
+	public const GIBBERISH_FIELD_THRESHOLD = 2;
+
+	/**
 	 * Host fragments commonly used for link / image spam (matched against URL hosts).
 	 *
 	 * @var array<int, string>
@@ -126,6 +131,20 @@ final class LD_FG_Heuristics {
 			}
 		}
 
+		if ( ! empty( $toggles['gibberish'] ) ) {
+			$gibberish = self::score_gibberish_fields( $fields );
+
+			if ( $gibberish['spam'] ) {
+				return array(
+					'verdict'    => 'spam',
+					'confidence' => (float) $gibberish['confidence'],
+					'reason'     => (string) $gibberish['reason'],
+					'layer'      => 'heuristic',
+					'matched'    => 'gibberish',
+				);
+			}
+		}
+
 		if ( ! empty( $toggles['bbcode_url'] ) && preg_match( '/\[url\s*=/i', $combined ) ) {
 			return array(
 				'verdict'    => 'spam',
@@ -198,6 +217,202 @@ final class LD_FG_Heuristics {
 		}
 
 		return $clean;
+	}
+
+	/**
+	 * Detect random-keyboard / dotted-email bot fills across fields.
+	 *
+	 * @param array<string, mixed> $fields Field map.
+	 *
+	 * @return array{spam: bool, confidence: float, reason: string}
+	 */
+	private static function score_gibberish_fields( array $fields ): array {
+		$clean = array(
+			'spam'       => false,
+			'confidence' => 0.0,
+			'reason'     => '',
+		);
+
+		$gibberish_count = 0;
+		$seen_values     = array();
+
+		foreach ( $fields as $value ) {
+			if ( ! is_string( $value ) ) {
+				if ( is_array( $value ) ) {
+					$value = implode( ' ', array_map( 'strval', $value ) );
+				} else {
+					continue;
+				}
+			}
+
+			$value = trim( $value );
+			if ( '' === $value ) {
+				continue;
+			}
+
+			// Deduplicate composite name parts that repeat the full name.
+			$norm = strtolower( preg_replace( '/\s+/', ' ', $value ) ?? $value );
+			if ( isset( $seen_values[ $norm ] ) ) {
+				continue;
+			}
+			$seen_values[ $norm ] = true;
+
+			if ( self::is_dotted_spam_email( $value ) ) {
+				return array(
+					'spam'       => true,
+					'confidence' => 0.96,
+					'reason'     => __( 'Obfuscated / dotted spam email address detected.', 'lancedesk-form-guard' ),
+				);
+			}
+
+			if ( self::value_looks_like_email( $value ) ) {
+				continue;
+			}
+
+			if ( self::looks_like_gibberish( $value ) ) {
+				++$gibberish_count;
+			}
+		}
+
+		if ( $gibberish_count >= self::GIBBERISH_FIELD_THRESHOLD ) {
+			return array(
+				'spam'       => true,
+				'confidence' => min( 0.97, 0.85 + ( 0.03 * $gibberish_count ) ),
+				/* translators: %d: number of gibberish-looking fields. */
+				'reason'     => sprintf( __( 'Random / gibberish field content detected (%d fields).', 'lancedesk-form-guard' ), $gibberish_count ),
+			);
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * Emails like a.b.c.d.e88@gmail.com used by bots to evade filters.
+	 *
+	 * @param string $value Candidate value.
+	 *
+	 * @return bool
+	 */
+	private static function is_dotted_spam_email( string $value ): bool {
+		if ( ! self::value_looks_like_email( $value ) ) {
+			return false;
+		}
+
+		$local = strtolower( (string) strstr( $value, '@', true ) );
+		if ( '' === $local ) {
+			return false;
+		}
+
+		// Three or more single-char segments separated by dots, or many dots overall.
+		if ( preg_match( '/^(?:[a-z0-9]\.){3,}[a-z0-9]+$/i', $local ) ) {
+			return true;
+		}
+
+		$dot_count = substr_count( $local, '.' );
+		if ( $dot_count >= 4 && strlen( $local ) <= 40 ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Email check that works in WP and CLI harnesses.
+	 *
+	 * @param string $value Candidate value.
+	 *
+	 * @return bool
+	 */
+	private static function value_looks_like_email( string $value ): bool {
+		if ( function_exists( 'is_email' ) ) {
+			return (bool) is_email( $value );
+		}
+
+		return (bool) filter_var( $value, FILTER_VALIDATE_EMAIL );
+	}
+
+	/**
+	 * Whether a field value looks like random keyboard spam rather than natural language.
+	 *
+	 * @param string $text Field value.
+	 *
+	 * @return bool
+	 */
+	private static function looks_like_gibberish( string $text ): bool {
+		$text = trim( $text );
+		$len  = strlen( $text );
+
+		if ( $len < 6 ) {
+			return false;
+		}
+
+		// Long unbroken mixed-case token (e.g. DYsbQojWeFeKANbmOgBS).
+		if ( $len >= 12 && false === strpos( $text, ' ' ) && preg_match( '/^[A-Za-z0-9]+$/', $text ) ) {
+			if ( preg_match( '/[a-z][A-Z]/', $text ) || preg_match( '/[A-Z]{2,}[a-z]/', $text ) ) {
+				return true;
+			}
+		}
+
+		$words = preg_split( '/\s+/u', $text );
+		if ( ! is_array( $words ) || empty( $words ) ) {
+			return false;
+		}
+
+		$gibberish_words = 0;
+		$alpha_words     = 0;
+
+		foreach ( $words as $word ) {
+			$word = preg_replace( '/[^A-Za-z]/', '', (string) $word );
+			if ( ! is_string( $word ) || strlen( $word ) < 5 ) {
+				continue;
+			}
+			++$alpha_words;
+			if ( self::word_is_gibberish( $word ) ) {
+				++$gibberish_words;
+			}
+		}
+
+		if ( $alpha_words < 1 ) {
+			return false;
+		}
+
+		return ( $gibberish_words / $alpha_words ) >= 0.6;
+	}
+
+	/**
+	 * Score a single alphabetic token for random-looking structure.
+	 *
+	 * @param string $word Alphabetic word.
+	 *
+	 * @return bool
+	 */
+	private static function word_is_gibberish( string $word ): bool {
+		$lower = strtolower( $word );
+		$len   = strlen( $lower );
+
+		if ( $len < 5 ) {
+			return false;
+		}
+
+		$vowels      = preg_match_all( '/[aeiou]/', $lower );
+		$vowel_ratio = $vowels / $len;
+
+		// Natural English is typically ~35–45% vowels; bot fills often sit much lower.
+		if ( $vowel_ratio < 0.22 && $len >= 6 ) {
+			return true;
+		}
+
+		// Five+ consonants in a row is rare in real names/messages.
+		if ( preg_match( '/[bcdfghjklmnpqrstvwxyz]{5,}/', $lower ) ) {
+			return true;
+		}
+
+		// CamelCase mid-token without spaces.
+		if ( preg_match( '/[a-z][A-Z]/', $word ) && $len >= 8 ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -388,6 +603,45 @@ final class LD_FG_Heuristics {
 			'bc game'                            => array( 2, 'BC Game pitch' ),
 			'онлайн-гемблинга'                   => array( 3, 'gambling pitch' ),
 			'онлайн-гейминга'                    => array( 2, 'gaming pitch' ),
+			// Vendor / agency contact-form solicitation (self-promo cards).
+			'prefer email'                       => array( 2, 'prefer-email CTA' ),
+			'reach us at'                        => array( 3, 'reach-us CTA' ),
+			'contact us at'                      => array( 2, 'contact-us-at CTA' ),
+			'visit our website'                  => array( 2, 'visit-website CTA' ),
+			'visit our site'                     => array( 2, 'visit-website CTA' ),
+			'check out our website'              => array( 2, 'visit-website CTA' ),
+			'view our website'                   => array( 2, 'visit-website CTA' ),
+			'see our portfolio'                  => array( 2, 'portfolio pitch' ),
+			'our portfolio'                      => array( 1, 'portfolio pitch' ),
+			'schedule a demo'                    => array( 2, 'demo CTA' ),
+			'book a demo'                        => array( 2, 'demo CTA' ),
+			'hire us'                            => array( 2, 'hire-us pitch' ),
+			'hire our team'                      => array( 3, 'hire-team pitch' ),
+			'our services include'               => array( 2, 'services catalog' ),
+			'we offer services'                  => array( 2, 'services catalog' ),
+			'we provide services'                => array( 2, 'services catalog' ),
+			'ecommerce development'              => array( 3, 'ecommerce development pitch' ),
+			'e-commerce development'             => array( 3, 'ecommerce development pitch' ),
+			'e commerce development'             => array( 3, 'ecommerce development pitch' ),
+			'web development services'           => array( 3, 'web development pitch' ),
+			'website development'                => array( 2, 'website development pitch' ),
+			'web design services'                => array( 2, 'web design pitch' ),
+			'wordpress development'              => array( 2, 'WordPress development pitch' ),
+			'shopify development'                => array( 3, 'Shopify development pitch' ),
+			'magento development'                => array( 2, 'Magento development pitch' ),
+			'woocommerce'                        => array( 1, 'WooCommerce pitch' ),
+			'custom software development'        => array( 3, 'custom software pitch' ),
+			'mobile app development'             => array( 2, 'app development pitch' ),
+			'app development'                    => array( 2, 'app development pitch' ),
+			'software development company'       => array( 3, 'software company pitch' ),
+			'it outsourcing'                     => array( 3, 'IT outsourcing pitch' ),
+			'offshore development'               => array( 3, 'offshore development pitch' ),
+			'dedicated developers'               => array( 2, 'dedicated developers pitch' ),
+			'digital marketing services'         => array( 3, 'digital marketing pitch' ),
+			'ppc management'                     => array( 2, 'PPC pitch' ),
+			'social media marketing'             => array( 2, 'SMM pitch' ),
+			'white label'                        => array( 2, 'white-label pitch' ),
+			'flagged content'                    => array( 2, 'flagged-content spam marker' ),
 		);
 
 		foreach ( $patterns as $needle => $meta ) {
@@ -426,12 +680,133 @@ final class LD_FG_Heuristics {
 			$hits[] = 'SEO + sales CTA';
 		}
 
+		$vendor = self::score_vendor_solicitation_structure( $haystack );
+		$score += (int) $vendor['score'];
+		if ( ! empty( $vendor['hits'] ) ) {
+			$hits = array_merge( $hits, $vendor['hits'] );
+		}
+
 		$hits  = array_values( array_unique( $hits ) );
 		$label = implode( ', ', array_slice( $hits, 0, 3 ) );
 
 		return array(
 			'score' => $score,
 			'label' => $label,
+		);
+	}
+
+	/**
+	 * Structural vendor solicitation: contact-card messages, sales mailboxes, brand/domain glue.
+	 *
+	 * Catches agency spam that is mostly “our URL + reach us at info@…” rather than SEO prose.
+	 *
+	 * @param string $haystack Lowercased combined submission text.
+	 *
+	 * @return array{score: int, hits: array<int, string>}
+	 */
+	private static function score_vendor_solicitation_structure( string $haystack ): array {
+		$score = 0;
+		$hits  = array();
+
+		if ( '' === $haystack ) {
+			return array(
+				'score' => 0,
+				'hits'  => array(),
+			);
+		}
+
+		$has_url = self::count_urls( $haystack ) > 0;
+
+		$has_contact_card_cta = (
+			false !== strpos( $haystack, 'prefer email' )
+			|| false !== strpos( $haystack, 'reach us at' )
+			|| false !== strpos( $haystack, 'contact us at' )
+			|| false !== strpos( $haystack, 'visit our website' )
+			|| false !== strpos( $haystack, 'visit our site' )
+			|| false !== strpos( $haystack, 'check out our website' )
+			|| false !== strpos( $haystack, 'view our website' )
+			|| false !== strpos( $haystack, 'our contact page' )
+			|| false !== strpos( $haystack, 'get a quote' )
+			|| false !== strpos( $haystack, 'request a quote' )
+		);
+
+		$has_service_pitch = (
+			false !== strpos( $haystack, 'ecommerce' )
+			|| false !== strpos( $haystack, 'e-commerce' )
+			|| false !== strpos( $haystack, 'web development' )
+			|| false !== strpos( $haystack, 'website development' )
+			|| false !== strpos( $haystack, 'app development' )
+			|| false !== strpos( $haystack, 'software development' )
+			|| false !== strpos( $haystack, 'digital marketing' )
+			|| false !== strpos( $haystack, 'shopify' )
+			|| false !== strpos( $haystack, 'magento' )
+			|| false !== strpos( $haystack, 'wordpress development' )
+			|| false !== strpos( $haystack, 'web design' )
+			|| false !== strpos( $haystack, 'it outsourcing' )
+			|| false !== strpos( $haystack, 'offshore development' )
+			|| false !== strpos( $haystack, 'dedicated developer' )
+			|| false !== strpos( $haystack, 'white label' )
+			|| false !== strpos( $haystack, 'ppc' )
+			|| false !== strpos( $haystack, 'social media marketing' )
+		);
+
+		$has_sales_mailbox = (bool) preg_match(
+			'/\b(info|sales|hello|hi|enquiry|inquiry|support|marketing|business|admin|office|contact|partners)@[a-z0-9.\-]+/i',
+			$haystack
+		);
+
+		if ( $has_url && $has_contact_card_cta ) {
+			$score += 3;
+			$hits[] = 'URL + contact-card CTA';
+		}
+
+		if ( $has_url && $has_service_pitch ) {
+			$score += 2;
+			$hits[] = 'URL + service pitch';
+		}
+
+		if ( $has_sales_mailbox && $has_url ) {
+			$score += 2;
+			$hits[] = 'sales mailbox + URL';
+		}
+
+		if ( $has_sales_mailbox && $has_service_pitch ) {
+			$score += 2;
+			$hits[] = 'sales mailbox + service pitch';
+		}
+
+		if ( $has_contact_card_cta && $has_service_pitch ) {
+			$score += 2;
+			$hits[] = 'contact CTA + service pitch';
+		}
+
+		// Brand-like name glued to the vendor domain (e.g. recodecomsymn + recodecommerce.com).
+		if ( preg_match_all( '/\b[a-z0-9._%+\-]+@([a-z0-9\-]+)\.[a-z]{2,}\b/i', $haystack, $matches ) ) {
+			$compact = preg_replace( '/\s+/', '', $haystack );
+			$compact = is_string( $compact ) ? $compact : $haystack;
+
+			foreach ( $matches[1] as $domain_label ) {
+				$domain_label = strtolower( (string) $domain_label );
+				if ( strlen( $domain_label ) < 6 ) {
+					continue;
+				}
+
+				$stem = substr( $domain_label, 0, min( 10, strlen( $domain_label ) ) );
+				if ( strlen( $stem ) < 6 ) {
+					continue;
+				}
+
+				if ( false !== strpos( $compact, $stem ) && ( $has_url || $has_service_pitch || $has_contact_card_cta ) ) {
+					$score += 2;
+					$hits[] = 'brand name matches vendor domain';
+					break;
+				}
+			}
+		}
+
+		return array(
+			'score' => $score,
+			'hits'  => $hits,
 		);
 	}
 

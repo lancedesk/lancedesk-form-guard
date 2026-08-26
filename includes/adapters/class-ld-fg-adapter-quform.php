@@ -29,7 +29,12 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 		'quform_submit',
 		'quform_current_page_id',
 		'quform_uid',
+		'quform_form_uid',
 		'quform_captcha_unique_id',
+		'quform_csrf_token',
+		'quform_loaded',
+		'quform_ajax',
+		'quform_count',
 	);
 
 	/**
@@ -145,10 +150,22 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 		$form = $source['form'];
 		$id   = method_exists( $form, 'getId' ) ? (string) $form->getId() : '';
 
-		$fields = $this->extract_form_values( $form );
+		$extracted = $this->extract_form_values( $form );
+		$fields    = isset( $extracted['fields'] ) && is_array( $extracted['fields'] ) ? $extracted['fields'] : array();
+		$honeypot  = isset( $extracted['honeypot'] ) ? (string) $extracted['honeypot'] : '';
+
 		// Always merge POST: getValues() can miss nested/composite keys while name/email
 		// still populate $fields — which previously skipped the POST fallback entirely.
-		$fields = array_merge( $fields, $this->extract_post_fields() );
+		$post = $this->extract_post_fields( $id, $honeypot );
+		$fields = array_merge( $fields, $post['fields'] );
+		if ( '' === $honeypot && '' !== $post['honeypot'] ) {
+			$honeypot = $post['honeypot'];
+		}
+
+		// Our injected honeypot (if present on the page).
+		if ( '' === $honeypot && isset( $_POST['ld_fg_hp'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$honeypot = sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		}
 
 		$email = '';
 		foreach ( $fields as $value ) {
@@ -163,7 +180,7 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 			'form_id'     => $id,
 			'form_title'  => $this->resolve_form_title( $form, $id ),
 			'fields'      => $fields,
-			'honeypot'    => isset( $_POST['ld_fg_hp'] ) ? sanitize_text_field( wp_unslash( (string) $_POST['ld_fg_hp'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			'honeypot'    => $honeypot,
 			'render_time' => isset( $_POST['ld_fg_rt'] ) ? absint( $_POST['ld_fg_rt'] ) : 0, // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			'submit_time' => time(),
 			'ip'          => isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) ) : '',
@@ -214,19 +231,21 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 	/**
 	 * Collect values from the Quform form object.
 	 *
+	 * Honeypot elements are excluded from fields and returned separately when filled.
+	 *
 	 * @param object $form Form object.
 	 *
-	 * @return array<string, string>
+	 * @return array{fields: array<string, string>, honeypot: string}
 	 */
 	private function extract_form_values( object $form ): array {
-		$fields = array();
+		$fields   = array();
+		$honeypot = '';
 
 		if ( method_exists( $form, 'getRecursiveIterator' ) ) {
 			foreach ( $form->getRecursiveIterator() as $element ) {
 				if ( ! is_object( $element ) || ! method_exists( $element, 'getName' ) ) {
 					continue;
 				}
-				// Skip non-field containers (Page/Group/etc.).
 				if ( ! method_exists( $element, 'getValue' ) && ! method_exists( $element, 'getValueText' ) ) {
 					continue;
 				}
@@ -249,6 +268,14 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 				}
 
 				$value = $this->sanitize_field_value( $value );
+
+				if ( $this->is_honeypot_element( $element ) ) {
+					if ( '' !== $value && '' === $honeypot ) {
+						$honeypot = $value;
+					}
+					continue;
+				}
+
 				if ( '' === $value ) {
 					continue;
 				}
@@ -256,13 +283,20 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 				$fields[ $this->sanitize_field_key( $key ) ] = $value;
 			}
 
-			return $fields;
+			return array(
+				'fields'   => $fields,
+				'honeypot' => $honeypot,
+			);
 		}
 
 		if ( method_exists( $form, 'getValues' ) ) {
 			$values = $form->getValues();
 			if ( is_array( $values ) ) {
+				$form_id = method_exists( $form, 'getId' ) ? (int) $form->getId() : 0;
+				$hp_key  = $this->honeypot_post_key( $form_id );
+
 				foreach ( $values as $key => $value ) {
+					$key = (string) $key;
 					if ( is_array( $value ) ) {
 						$value = implode( ' ', array_map( 'strval', $value ) );
 					}
@@ -270,21 +304,35 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 					if ( '' === $value ) {
 						continue;
 					}
-					$fields[ $this->sanitize_field_key( (string) $key ) ] = $value;
+					if ( '' !== $hp_key && $key === $hp_key ) {
+						if ( '' === $honeypot ) {
+							$honeypot = $value;
+						}
+						continue;
+					}
+					$fields[ $this->sanitize_field_key( $key ) ] = $value;
 				}
 			}
 		}
 
-		return $fields;
+		return array(
+			'fields'   => $fields,
+			'honeypot' => $honeypot,
+		);
 	}
 
 	/**
 	 * Flatten quform_* POST values (including nested arrays) into string fields.
 	 *
-	 * @return array<string, string>
+	 * @param string $form_id       Form id.
+	 * @param string $known_honeypot Already-detected honeypot value (if any).
+	 *
+	 * @return array{fields: array<string, string>, honeypot: string}
 	 */
-	private function extract_post_fields(): array {
-		$fields = array();
+	private function extract_post_fields( string $form_id, string $known_honeypot = '' ): array {
+		$fields   = array();
+		$honeypot = $known_honeypot;
+		$hp_key   = $this->honeypot_post_key( (int) $form_id );
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Runs inside Quform's submission pipeline.
 		foreach ( $_POST as $key => $value ) {
@@ -292,15 +340,87 @@ final class LD_FG_Adapter_Quform implements LD_FG_Form_Adapter {
 			if ( 0 !== strpos( $key, 'quform_' ) ) {
 				continue;
 			}
-			if ( in_array( $key, self::META_POST_KEYS, true ) ) {
+			if ( $this->is_meta_post_key( $key ) ) {
 				continue;
 			}
 
-			$this->flatten_post_value( $fields, $key, $value );
+			$flat = array();
+			$this->flatten_post_value( $flat, $key, $value );
+
+			foreach ( $flat as $flat_key => $flat_value ) {
+				if ( '' !== $hp_key && ( $flat_key === $hp_key || 0 === strpos( $flat_key, $hp_key . '_' ) ) ) {
+					if ( '' !== $flat_value && '' === $honeypot ) {
+						$honeypot = $flat_value;
+					}
+					continue;
+				}
+				$fields[ $flat_key ] = $flat_value;
+			}
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
-		return $fields;
+		return array(
+			'fields'   => $fields,
+			'honeypot' => $honeypot,
+		);
+	}
+
+	/**
+	 * Whether a POST key is Quform plumbing (not user content).
+	 *
+	 * @param string $key POST key.
+	 *
+	 * @return bool
+	 */
+	private function is_meta_post_key( string $key ): bool {
+		if ( in_array( $key, self::META_POST_KEYS, true ) ) {
+			return true;
+		}
+
+		// Defensive: any future plumbing keys like quform_something_token.
+		if ( preg_match( '/^quform_(csrf|loaded|ajax|count|uid|form_uid|form_id|submit|current_page)/', $key ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether a Quform element is the built-in honeypot.
+	 *
+	 * @param object $element Element object.
+	 *
+	 * @return bool
+	 */
+	private function is_honeypot_element( object $element ): bool {
+		if ( class_exists( 'Quform_Element_Honeypot', false ) && $element instanceof Quform_Element_Honeypot ) {
+			return true;
+		}
+
+		if ( method_exists( $element, 'config' ) && 'honeypot' === (string) $element->config( 'type' ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Deterministic Quform honeypot POST name for a form id.
+	 *
+	 * Mirrors Quform_Form_Factory: md5('hp_id_{id}') → element id → quform_{formId}_{elementId}.
+	 *
+	 * @param int $form_id Form id.
+	 *
+	 * @return string Empty when form id is invalid.
+	 */
+	private function honeypot_post_key( int $form_id ): string {
+		if ( $form_id < 1 ) {
+			return '';
+		}
+
+		$element_id = ( hexdec( substr( md5( 'hp_id_' . $form_id ), 0, 6 ) ) % 900000 ) + 100000;
+
+		return 'quform_' . $form_id . '_' . $element_id;
 	}
 
 	/**

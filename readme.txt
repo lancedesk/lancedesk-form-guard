@@ -4,7 +4,7 @@ Tags: spam, forms, security, ai, antispam
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.8
+Stable tag: 0.1.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,14 @@ This plugin optionally connects to third-party AI APIs to classify form submissi
 7. Log detail drawer with integration, layer, provider, confidence, reason, and captured fields.
 
 == Changelog ==
+
+= 0.1.10 =
+* Layer 1 commercial outreach expanded into full vendor/agency solicitation detection: contact-card CTAs, sales mailboxes + URLs, ecommerce/dev service pitches, and brand/domain glue — blocks submissions even when Quform honeypot is empty.
+
+= 0.1.9 =
+* Quform: treat Quform’s built-in honeypot as spam when filled (block + log before Quform validation).
+* Layer 1: Random / Gibberish Content rule for bot keyboard fills and dotted obfuscated emails.
+* Quform logs: strip CSRF/uid/ajax/loaded meta keys from Captured Fields.
 
 = 0.1.8 =
 * Settings and Protection: Save buttons stay disabled until a setting actually changes.

@@ -34,6 +34,7 @@ $ld_fg_settings = array(
 		'too_fast'            => 1,
 		'suspicious_links'    => 1,
 		'commercial_outreach' => 1,
+		'gibberish'           => 1,
 	),
 );
 
@@ -56,6 +57,7 @@ $ld_fg_labels = array(
 	16 => 'German solar Dieburg',
 	17 => 'Russian tehosmotr price SPB',
 	18 => 'Russian Kraken darknet',
+	19 => 'Vendor contact-card (recodecommerce)',
 );
 
 $ld_fg_messages = array();
@@ -122,6 +124,8 @@ $ld_fg_messages[15] = "Good day!\n\nModern translucent structures made of alumin
 $ld_fg_messages[16] = "Solar Dieburg\n\n12 KW Hybrid-Wechselrichter 3 Phasen 48V";
 $ld_fg_messages[17] = "Нужен техосмотр для постановки на учёт? Сначала уточните тип операции в МРЭО, потом пройдите осмотр и проверьте карту в базе. В СПб много точек у основных магистралей. Полезная ссылка:\n\n\nдиагностическая карта спб цена";
 $ld_fg_messages[18] = "Пользователи Кракен применяют криптовалюту как расчётное средство, исключающее банковский контроль.\n\nдаркнет маркетплейс, который действительно держит слово: если заявлено, что товар будет у тебя через пять минут, он будет у тебя через пять минут, без единого исключения.\n\nВХОД НА ЧЕРНЫЙ РЫНОК KRAKEN\n\nТот самый момент, когда ты нажимаешь кнопку оплаты, и цифровой товар мгновенно падает в твой доступ — это чистый, неразбавленный дофаминовый удар. Мозг просто не успевает обработать, как быстро сбылось его желание, и это вызывает настоящую эйфорию.\n\nНа площадке Kraken можно обнаружить предложения о сбыте фальшивых документов — от паспортов до водительских удостоверений и дипломов. Также фигурируют услуги, связанные с неправомерным получением конфиденциальных сведений о гражданах.";
+
+$ld_fg_messages[19] = "Name: recodecomsymn recodecomsymnHS\nEmail: info@recodecommerce.com\nSubject: eCommerce Development\n\nFlagged Content\nhttps://recodecommerce.com/contact\nPrefer email? Reach us at info@recodecommerce.com";
 
 $ld_fg_blocked = 0;
 $ld_fg_allowed = 0;

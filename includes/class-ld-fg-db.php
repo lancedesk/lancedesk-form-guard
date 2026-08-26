@@ -165,6 +165,7 @@ final class LD_FG_DB {
 					'too_fast'            => 1,
 					'suspicious_links'    => 1,
 					'commercial_outreach' => 1,
+					'gibberish'           => 1,
 				),
 				'ai_enabled'            => 0,
 				'confidence_quarantine' => 0.7,

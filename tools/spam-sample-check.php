@@ -65,6 +65,7 @@ $ld_fg_settings = array(
 		'too_fast'            => 1,
 		'suspicious_links'    => 1,
 		'commercial_outreach' => 1,
+		'gibberish'           => 1,
 	),
 );
 
