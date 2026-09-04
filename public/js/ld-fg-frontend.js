@@ -146,6 +146,15 @@
 			var form = cont.querySelector('form') || cont;
 			ensureTraps(form, 'ninja', m[1]);
 		});
+
+		// Custom / declarative forms (data attributes)
+		document.querySelectorAll('form[data-ld-fg-integration][data-ld-fg-form]').forEach(function (form) {
+			var integration = form.getAttribute('data-ld-fg-integration') || '';
+			var id = form.getAttribute('data-ld-fg-form') || '';
+			if (integration && id) {
+				ensureTraps(form, integration, id);
+			}
+		});
 	}
 
 	function readTrapsNear(el) {

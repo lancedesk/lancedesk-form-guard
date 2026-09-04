@@ -4,7 +4,7 @@ Tags: spam, forms, security, ai, antispam
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.10
+Stable tag: 0.1.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,11 @@ This plugin optionally connects to third-party AI APIs to classify form submissi
 7. Log detail drawer with integration, layer, provider, confidence, reason, and captured fields.
 
 == Changelog ==
+
+= 0.1.11 =
+* External adapters via `ld_fg_adapters` filter for custom form integrations.
+* `ld_fg_trap_fields()` helper for rendering honeypot/timing traps on custom widgets.
+* Front-end JS discovers forms marked with `data-ld-fg-integration` / `data-ld-fg-form`.
 
 = 0.1.10 =
 * Layer 1 commercial outreach expanded into full vendor/agency solicitation detection: contact-card CTAs, sales mailboxes + URLs, ecommerce/dev service pitches, and brand/domain glue — blocks submissions even when Quform honeypot is empty.

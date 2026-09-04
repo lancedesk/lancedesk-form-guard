@@ -3,7 +3,7 @@
  * Plugin Name:       LanceDesk Form Guard
  * Plugin URI:        https://github.com/lancedesk/lancedesk-form-guard
  * Description:       Protects contact forms and WordPress comments with heuristics and optional AI before emails send or comments are saved.
- * Version:           0.1.10
+ * Version:           0.1.11
  * Author:            Lance Desk
  * Author URI:        https://lancedesk.com
  * Text Domain:       lancedesk-form-guard
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LD_FG_VERSION', '0.1.10' );
+define( 'LD_FG_VERSION', '0.1.11' );
 define( 'LD_FG_PLUGIN_FILE', __FILE__ );
 define( 'LD_FG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LD_FG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -112,6 +112,22 @@ function ld_fg_init_plugin(): void {
 
 	require_once LD_FG_PLUGIN_DIR . 'includes/class-ld-fg-plugin.php';
 	LD_FG_Plugin::instance();
+}
+
+/**
+ * Render honeypot / timing traps for a protected custom form.
+ *
+ * @param string $integration Integration slug (e.g. italbox).
+ * @param string $form_id     Form ID (e.g. corporate_inquiry).
+ *
+ * @return string
+ */
+function ld_fg_trap_fields( string $integration, string $form_id ): string {
+	if ( ! class_exists( 'LD_FG_Frontend', false ) ) {
+		return '';
+	}
+
+	return LD_FG_Frontend::get_trap_fields( $integration, $form_id );
 }
 
 add_action( 'plugins_loaded', 'ld_fg_init_plugin' );

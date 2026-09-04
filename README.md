@@ -3,7 +3,7 @@
 WordPress plugin that protects **contact form submissions** and **WordPress post comments** with local heuristics and optional AI classification — before notification emails are sent or comments are saved.
 
 **Repository:** https://github.com/lancedesk/lancedesk-form-guard  
-**Current version:** 0.1.10  
+**Current version:** 0.1.11  
 **Requires:** WordPress 6.4+, PHP 8.0+
 
 ## What it does
@@ -22,6 +22,7 @@ Blocked and quarantined submissions are logged with hashed IP/email and truncate
 | Quform | Per-form toggle |
 | Ninja Forms | Per-form toggle |
 | **WordPress Core (comments)** | **Settings → WordPress Core** toggle (site-wide) |
+| Custom (via `ld_fg_adapters`) | Appears under **Forms** when an adapter is registered (e.g. Italbox Corporate Inquiry) |
 
 ## Layer 1 heuristics (local)
 
@@ -68,6 +69,12 @@ php tools/spam-sample-check.php   # Layer 1 sample regression (dev tree only; ex
 Run **Plugin Check** against the release zip, not the full dev tree (`tools/`, `docs/`, and `node_modules/` are excluded from the zip).
 
 ## Changelog
+
+### 0.1.11
+
+- External adapters via `ld_fg_adapters` filter (e.g. Italbox Corporate Inquiry)
+- `ld_fg_trap_fields()` helper + `LD_FG_Frontend::get_trap_fields()` for custom widgets
+- Front-end JS discovers forms marked with `data-ld-fg-integration` / `data-ld-fg-form`
 
 ### 0.1.10
 

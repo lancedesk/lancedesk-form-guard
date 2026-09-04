@@ -95,10 +95,24 @@ final class LD_FG_Plugin {
 			'ninja'   => new LD_FG_Adapter_Ninja(),
 		);
 
-		// Register after other plugins have loaded (we are on plugins_loaded).
+		// Merge external adapters + register hooks after other plugins load.
 		add_action(
 			'init',
 			function (): void {
+				/**
+				 * Filter registered Form Guard adapters (add custom integrations).
+				 *
+				 * @param array<string, LD_FG_Form_Adapter> $adapters Adapters keyed by slug.
+				 */
+				$extra = apply_filters( 'ld_fg_adapters', array() );
+				if ( is_array( $extra ) ) {
+					foreach ( $extra as $slug => $adapter ) {
+						if ( $adapter instanceof LD_FG_Form_Adapter ) {
+							$this->adapters[ sanitize_key( (string) $slug ) ] = $adapter;
+						}
+					}
+				}
+
 				foreach ( $this->adapters as $adapter ) {
 					if ( $adapter->is_available() ) {
 						$adapter->register_hooks();

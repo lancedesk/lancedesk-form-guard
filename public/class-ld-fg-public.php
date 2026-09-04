@@ -19,14 +19,21 @@ final class LD_FG_Frontend {
 	 *
 	 * @var bool
 	 */
-	private bool $assets_enqueued = false;
+	private $assets_enqueued = false;
 
 	/**
 	 * Forms that already received trap markup this request.
 	 *
 	 * @var array<string, true>
 	 */
-	private array $printed = array();
+	private $printed = array();
+
+	/**
+	 * Active front-end instance for trap helpers.
+	 *
+	 * @var self|null
+	 */
+	private static $instance = null;
 
 	/**
 	 * Bootstrap front-end hooks.
@@ -34,8 +41,18 @@ final class LD_FG_Frontend {
 	 * @return void
 	 */
 	public function __construct() {
+		self::$instance = $this;
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_assets' ), 20 );
 		add_action( 'init', array( $this, 'register_form_hooks' ), 30 );
+	}
+
+	/**
+	 * Active front-end instance (if bootstrapped).
+	 *
+	 * @return self|null
+	 */
+	public static function instance() {
+		return self::$instance;
 	}
 
 	/**
@@ -388,6 +405,39 @@ final class LD_FG_Frontend {
 		$parts[] = '</div>';
 
 		return implode( '', $parts );
+	}
+
+	/**
+	 * Public helper for custom form widgets (e.g. Italbox Corporate Inquiry).
+	 *
+	 * Safe to call from other plugins; returns empty string when Form Guard
+	 * is inactive, the form is not protected, or injection is disabled.
+	 *
+	 * @param string $integration Integration slug.
+	 * @param string $form_id     Form ID.
+	 *
+	 * @return string
+	 */
+	public static function get_trap_fields( $integration, $form_id ) {
+		$self = self::instance();
+		if ( ! $self instanceof self ) {
+			return '';
+		}
+
+		$integration = (string) $integration;
+		$form_id     = (string) $form_id;
+
+		if ( ! LD_FG_Settings::is_form_protected( $integration, $form_id ) ) {
+			return '';
+		}
+
+		if ( ! $self->is_injection_enabled() ) {
+			return '';
+		}
+
+		$self->maybe_enqueue_assets();
+
+		return $self->fields_html( $integration, $form_id );
 	}
 
 	/**
