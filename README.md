@@ -3,6 +3,7 @@
 WordPress plugin that protects **contact form submissions** and **WordPress post comments** with local heuristics and optional AI classification — before notification emails are sent or comments are saved.
 
 **Repository:** https://github.com/lancedesk/lancedesk-form-guard  
+**WordPress.org:** https://wordpress.org/plugins/lancedesk-form-guard/  
 **Current version:** 0.1.16  
 **Requires:** WordPress 6.4+, PHP 8.0+
 
