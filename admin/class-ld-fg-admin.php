@@ -33,8 +33,11 @@ final class LD_FG_Admin {
 		add_action( 'wp_ajax_ld_fg_release_quarantine', array( $this, 'ajax_release_quarantine' ) );
 		add_action( 'wp_ajax_ld_fg_discard_quarantine', array( $this, 'ajax_discard_quarantine' ) );
 		add_action( 'wp_ajax_ld_fg_mark_log_read', array( $this, 'ajax_mark_log_read' ) );
+		add_action( 'wp_ajax_ld_fg_bulk_logs', array( $this, 'ajax_bulk_logs' ) );
+		add_action( 'wp_ajax_ld_fg_delete_logs', array( $this, 'ajax_delete_logs' ) );
 		add_action( 'wp_ajax_ld_fg_dismiss_setup', array( $this, 'ajax_dismiss_setup' ) );
 		add_action( 'wp_ajax_ld_fg_save_settings', array( $this, 'ajax_save_settings' ) );
+		add_action( 'admin_post_ld_fg_export_logs_csv', array( $this, 'export_logs_csv' ) );
 	}
 
 	/**
@@ -135,8 +138,12 @@ final class LD_FG_Admin {
 		if ( array_key_exists( 'enabled', $input ) ) {
 			$output['enabled'] = ! empty( $input['enabled'] ) ? 1 : 0;
 		}
+		if ( array_key_exists( 'keep_logs', $input ) ) {
+			$output['keep_logs'] = ! empty( $input['keep_logs'] ) ? 1 : 0;
+		}
 		if ( array_key_exists( 'retention_days', $input ) ) {
-			$output['retention_days'] = absint( $input['retention_days'] );
+			$days = absint( $input['retention_days'] );
+			$output['retention_days'] = in_array( $days, array( 15, 30, 90, 180 ), true ) ? $days : 90;
 		}
 		if ( array_key_exists( 'delete_on_uninstall', $input ) ) {
 			$output['delete_on_uninstall'] = ! empty( $input['delete_on_uninstall'] ) ? 1 : 0;
@@ -613,6 +620,211 @@ final class LD_FG_Admin {
 		}
 
 		wp_send_json_success();
+	}
+
+	/**
+	 * AJAX: bulk mark read / unread for selected log IDs.
+	 *
+	 * @return void
+	 */
+	public function ajax_bulk_logs(): void {
+		check_ajax_referer( 'ld_fg_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'lancedesk-form-guard' ) ) );
+		}
+
+		$bulk = isset( $_POST['bulk'] ) ? sanitize_key( wp_unslash( (string) $_POST['bulk'] ) ) : '';
+		$ids  = $this->parse_log_ids_from_request();
+
+		if ( empty( $ids ) ) {
+			wp_send_json_error( array( 'message' => __( 'No log entries selected.', 'lancedesk-form-guard' ) ) );
+		}
+
+		$user_id = get_current_user_id();
+
+		if ( 'mark-read' === $bulk ) {
+			$n = LD_FG_Logger::mark_read_ids( $ids, $user_id );
+			wp_send_json_success(
+				array(
+					'updated' => $n,
+					/* translators: %d: number of entries. */
+					'message' => sprintf( __( 'Marked %d entries as read.', 'lancedesk-form-guard' ), $n ),
+				)
+			);
+		}
+
+		if ( 'mark-unread' === $bulk ) {
+			$n = LD_FG_Logger::mark_unread_ids( $ids, $user_id );
+			wp_send_json_success(
+				array(
+					'updated' => $n,
+					/* translators: %d: number of entries. */
+					'message' => sprintf( __( 'Marked %d entries as unread.', 'lancedesk-form-guard' ), $n ),
+				)
+			);
+		}
+
+		wp_send_json_error( array( 'message' => __( 'Unknown bulk action.', 'lancedesk-form-guard' ) ) );
+	}
+
+	/**
+	 * Stream filtered security logs as CSV download.
+	 *
+	 * @return void
+	 */
+	public function export_logs_csv(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'lancedesk-form-guard' ), 403 );
+		}
+
+		check_admin_referer( 'ld_fg_export_logs_csv' );
+
+		$filter = array();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce checked above.
+		$search = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['s'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$verdict = isset( $_GET['verdict'] ) ? sanitize_key( wp_unslash( (string) $_GET['verdict'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$layer = isset( $_GET['layer'] ) ? sanitize_key( wp_unslash( (string) $_GET['layer'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$date_range = isset( $_GET['date_range'] ) ? sanitize_key( wp_unslash( (string) $_GET['date_range'] ) ) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$ids_raw = isset( $_GET['ids'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['ids'] ) ) : '';
+
+		if ( '' !== $search ) {
+			$filter['search'] = $search;
+		}
+		if ( in_array( $verdict, array( 'blocked', 'allowed', 'quarantined' ), true ) ) {
+			$filter['verdict'] = $verdict;
+		}
+		if ( in_array( $layer, array( 'heuristic', 'ai', 'none' ), true ) ) {
+			$filter['layer'] = $layer;
+		}
+		if ( in_array( $date_range, array( 'today', 'yesterday', '7days' ), true ) ) {
+			$filter['date_range'] = $date_range;
+		}
+		if ( '' !== $ids_raw ) {
+			$filter['ids'] = array_map( 'absint', explode( ',', $ids_raw ) );
+		}
+
+		$filename = 'lancedesk-form-guard-logs-' . gmdate( 'Y-m-d-His' ) . '.csv';
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Streaming download to php://output.
+		$out = fopen( 'php://output', 'w' );
+		if ( false === $out ) {
+			wp_die( esc_html__( 'Could not open export stream.', 'lancedesk-form-guard' ) );
+		}
+
+		fprintf( $out, chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) );
+		fputcsv( $out, array( 'ID', 'Date', 'Form', 'Form ID', 'Verdict', 'Layer', 'Confidence', 'Reason', 'Snippet', 'Integration' ) );
+
+		$offset = 0;
+		$chunk  = 200;
+		do {
+			$filter['offset'] = $offset;
+			$rows             = LD_FG_Logger::query_recent( $chunk, $filter );
+			foreach ( $rows as $row ) {
+				fputcsv(
+					$out,
+					array(
+						(int) ( $row['id'] ?? 0 ),
+						(string) ( $row['created_at'] ?? '' ),
+						(string) ( $row['form_title'] ?? '' ),
+						(string) ( $row['form_id'] ?? '' ),
+						(string) ( $row['verdict'] ?? '' ),
+						(string) ( $row['layer'] ?? '' ),
+						(string) round( (float) ( $row['confidence'] ?? 0 ) * 100 ),
+						(string) ( $row['reason'] ?? '' ),
+						(string) ( $row['snippet'] ?? '' ),
+						(string) ( $row['integration'] ?? '' ),
+					)
+				);
+			}
+			$offset += $chunk;
+		} while ( count( $rows ) === $chunk );
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose( $out );
+		exit;
+	}
+
+	/**
+	 * Parse log ID list from POST (JSON array or comma string).
+	 *
+	 * @return array<int, int>
+	 */
+	private function parse_log_ids_from_request(): array {
+		$raw_ids = isset( $_POST['ids'] ) ? wp_unslash( $_POST['ids'] ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Caller verifies nonce; sanitized below.
+
+		if ( is_string( $raw_ids ) ) {
+			$decoded = json_decode( $raw_ids, true );
+			$raw_ids = is_array( $decoded ) ? $decoded : array_filter( array_map( 'trim', explode( ',', $raw_ids ) ) );
+		}
+
+		if ( ! is_array( $raw_ids ) ) {
+			return array();
+		}
+
+		return array_values(
+			array_unique(
+				array_filter(
+					array_map( 'absint', $raw_ids ),
+					static function ( int $id ): bool {
+						return $id > 0;
+					}
+				)
+			)
+		);
+	}
+
+	/**
+	 * AJAX: permanently delete security log rows.
+	 *
+	 * @return void
+	 */
+	public function ajax_delete_logs(): void {
+		check_ajax_referer( 'ld_fg_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'lancedesk-form-guard' ) ) );
+		}
+
+		$delete_all = ! empty( $_POST['delete_all'] );
+
+		if ( $delete_all ) {
+			$deleted = LD_FG_Logger::delete_all();
+			wp_send_json_success(
+				array(
+					'deleted' => $deleted,
+					/* translators: %d: number of deleted log entries. */
+					'message' => sprintf( __( 'Deleted %d log entries.', 'lancedesk-form-guard' ), $deleted ),
+				)
+			);
+		}
+
+		$ids = $this->parse_log_ids_from_request();
+
+		if ( empty( $ids ) ) {
+			wp_send_json_error( array( 'message' => __( 'No log entries selected.', 'lancedesk-form-guard' ) ) );
+		}
+
+		$deleted = LD_FG_Logger::delete_ids( $ids );
+
+		if ( $deleted < 1 ) {
+			wp_send_json_error( array( 'message' => __( 'Could not delete log entries.', 'lancedesk-form-guard' ) ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'deleted' => $deleted,
+				/* translators: %d: number of deleted log entries. */
+				'message' => sprintf( __( 'Deleted %d log entries.', 'lancedesk-form-guard' ), $deleted ),
+			)
+		);
 	}
 
 	/**

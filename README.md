@@ -3,7 +3,7 @@
 WordPress plugin that protects **contact form submissions** and **WordPress post comments** with local heuristics and optional AI classification — before notification emails are sent or comments are saved.
 
 **Repository:** https://github.com/lancedesk/lancedesk-form-guard  
-**Current version:** 0.1.11  
+**Current version:** 0.1.16  
 **Requires:** WordPress 6.4+, PHP 8.0+
 
 ## What it does
@@ -69,6 +69,32 @@ php tools/spam-sample-check.php   # Layer 1 sample regression (dev tree only; ex
 Run **Plugin Check** against the release zip, not the full dev tree (`tools/`, `docs/`, and `node_modules/` are excluded from the zip).
 
 ## Changelog
+
+### 0.1.16
+
+- Dashboard: Recent Blocks only lists blocked/quarantined entries (no longer shows Allowed as “Blocked”)
+
+### 0.1.15
+
+- Security Logs detail drawer: Delete (bottom right) opens the FG-L1d confirm modal for that entry
+
+### 0.1.14
+
+- Security Logs: Reset filter link only when a select filter is active
+- Security Logs: Reason column is reason-only (payload stays in the detail drawer)
+
+### 0.1.13
+
+- Security Logs redesign (FG-L1b): KPI strip, layer/date filters, bulk mark read/unread/export/delete, unread dots, middle-aligned rows
+- Header: Export CSV, Columns (hide/show), Clear All Logs with confirm modal
+- CSV export respects current filters; selected-row export from bulk menu
+
+### 0.1.12
+
+- Security Logs pagination (25 per page) with correct total counts
+- Bulk select / delete selected / delete all logs
+- Server-side search + verdict filter
+- Settings: Keep security logs toggle (default on); optional auto-purge at 15/30/90/180 days
 
 ### 0.1.11
 

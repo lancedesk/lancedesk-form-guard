@@ -14,7 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- View template locals.
 
 $enabled           = ! empty( $ld_fg_settings['enabled'] );
+$keep_logs         = ! isset( $ld_fg_settings['keep_logs'] ) || ! empty( $ld_fg_settings['keep_logs'] );
 $retention         = (int) ( $ld_fg_settings['retention_days'] ?? 90 );
+if ( ! in_array( $retention, array( 15, 30, 90, 180 ), true ) ) {
+	$retention = 90;
+}
 $delete_uninstall  = ! empty( $ld_fg_settings['delete_on_uninstall'] );
 $privacy_ack       = ! empty( $ld_fg_settings['privacy_ack'] );
 $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
@@ -43,10 +47,21 @@ $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 <div class="relative w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary pointer-events-none" aria-hidden="true"></div>
 </label>
 </div>
-<div class="space-y-unit">
+<div class="flex items-start justify-between p-margin-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div class="flex-1 pr-margin-md">
+<label class="font-headline-lg text-[18px] leading-tight text-on-surface cursor-pointer select-none" for="ld-fg-keep-logs"><?php esc_html_e( 'Keep security logs', 'lancedesk-form-guard' ); ?></label>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-unit"><?php esc_html_e( 'When on, logs are kept until you delete them manually. Turn off to auto-delete older entries on a schedule.', 'lancedesk-form-guard' ); ?></p>
+</div>
+<label class="relative inline-flex items-center h-6 mt-1 cursor-pointer" for="ld-fg-keep-logs">
+<input class="sr-only peer" id="ld-fg-keep-logs" name="keep_logs" type="checkbox" value="1" <?php checked( $keep_logs ); ?> />
+<div class="relative w-11 h-6 bg-outline-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary pointer-events-none" aria-hidden="true"></div>
+</label>
+</div>
+<div id="ld-fg-retention-wrap" class="space-y-unit mt-margin-md<?php echo $keep_logs ? ' hidden' : ''; ?>">
 <label class="block font-label-md text-label-md text-on-surface" for="ld-fg-log-retention"><?php esc_html_e( 'Log Retention Period', 'lancedesk-form-guard' ); ?></label>
 <div class="relative w-full max-w-xs">
-<select class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-margin-md py-2.5 font-body-lg text-body-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer" id="ld-fg-log-retention" name="retention_days">
+<select class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-margin-md py-2.5 font-body-lg text-body-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer" id="ld-fg-log-retention" name="retention_days" <?php disabled( $keep_logs ); ?>>
+<option value="15" <?php selected( $retention, 15 ); ?>><?php esc_html_e( '15 Days', 'lancedesk-form-guard' ); ?></option>
 <option value="30" <?php selected( $retention, 30 ); ?>><?php esc_html_e( '30 Days', 'lancedesk-form-guard' ); ?></option>
 <option value="90" <?php selected( $retention, 90 ); ?>><?php esc_html_e( '90 Days', 'lancedesk-form-guard' ); ?></option>
 <option value="180" <?php selected( $retention, 180 ); ?>><?php esc_html_e( '180 Days', 'lancedesk-form-guard' ); ?></option>
@@ -55,7 +70,7 @@ $protect_comments  = ! empty( $ld_fg_settings['protect_core_comments'] );
 <span class="ld-fg-icon material-symbols-outlined text-[20px]">expand_more</span>
 </div>
 </div>
-<p class="font-body-sm text-body-sm text-on-surface-variant"><?php esc_html_e( 'Duration to keep security logs before automatic deletion.', 'lancedesk-form-guard' ); ?></p>
+<p class="font-body-sm text-body-sm text-on-surface-variant"><?php esc_html_e( 'Older logs are removed automatically once a day. You can still delete logs manually anytime.', 'lancedesk-form-guard' ); ?></p>
 </div>
 <div class="flex items-start justify-between p-margin-md bg-surface-container-low rounded-lg border border-outline-variant/30 mt-margin-md">
 <div class="flex-1 pr-margin-md">

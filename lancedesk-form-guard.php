@@ -3,7 +3,7 @@
  * Plugin Name:       LanceDesk Form Guard
  * Plugin URI:        https://github.com/lancedesk/lancedesk-form-guard
  * Description:       Protects contact forms and WordPress comments with heuristics and optional AI before emails send or comments are saved.
- * Version:           0.1.11
+ * Version:           0.1.16
  * Author:            Lance Desk
  * Author URI:        https://lancedesk.com
  * Text Domain:       lancedesk-form-guard
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LD_FG_VERSION', '0.1.11' );
+define( 'LD_FG_VERSION', '0.1.16' );
 define( 'LD_FG_PLUGIN_FILE', __FILE__ );
 define( 'LD_FG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LD_FG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -98,7 +98,44 @@ require_once LD_FG_PLUGIN_DIR . 'includes/class-ld-fg-db.php';
 require_once LD_FG_PLUGIN_DIR . 'includes/class-ld-fg-activator.php';
 
 register_activation_hook( __FILE__, array( 'LD_FG_Activator', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'LD_FG_Activator', 'deactivate' ) );
 add_action( 'plugins_loaded', array( 'LD_FG_DB', 'maybe_upgrade' ), 5 );
+
+/**
+ * Daily retention purge for security logs.
+ *
+ * @return void
+ */
+function ld_fg_run_retention_purge(): void {
+	if ( ! class_exists( 'LD_FG_Settings', false ) || ! class_exists( 'LD_FG_Logger', false ) ) {
+		return;
+	}
+
+	// Keep forever unless the site owner opts into auto-deletion.
+	if ( ! empty( LD_FG_Settings::get_value( 'keep_logs', 1 ) ) ) {
+		return;
+	}
+
+	$days = (int) LD_FG_Settings::get_value( 'retention_days', 90 );
+	if ( ! in_array( $days, array( 15, 30, 90, 180 ), true ) ) {
+		$days = 90;
+	}
+
+	LD_FG_Logger::purge_older_than( $days );
+}
+add_action( 'ld_fg_daily_retention_purge', 'ld_fg_run_retention_purge' );
+
+/**
+ * Ensure the retention cron exists for upgrades (activation hook may not re-run).
+ *
+ * @return void
+ */
+function ld_fg_maybe_schedule_retention_cron(): void {
+	if ( ! wp_next_scheduled( 'ld_fg_daily_retention_purge' ) ) {
+		wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'ld_fg_daily_retention_purge' );
+	}
+}
+add_action( 'admin_init', 'ld_fg_maybe_schedule_retention_cron' );
 
 /**
  * Initialize the plugin after all plugins are loaded.

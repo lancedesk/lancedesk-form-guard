@@ -27,6 +27,7 @@ final class LD_FG_Settings {
 	public static function defaults(): array {
 		return array(
 			'enabled'               => 0,
+			'keep_logs'             => 1,
 			'retention_days'        => 90,
 			'delete_on_uninstall'   => 0,
 			'privacy_ack'           => 0,

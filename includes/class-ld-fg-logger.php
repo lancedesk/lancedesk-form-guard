@@ -82,10 +82,129 @@ final class LD_FG_Logger {
 	}
 
 	/**
+	 * Build WHERE clause fragments and bind params for log filters.
+	 *
+	 * @param array<string, mixed> $filter Optional filters: verdict, layer, search, date_range, ids.
+	 *
+	 * @return array{0: array<int, string>, 1: array<int, mixed>}
+	 */
+	private static function build_filter_clause( array $filter ): array {
+		global $wpdb;
+
+		$where   = array( '1=1' );
+		$params  = array();
+		$allowed = array( 'blocked', 'allowed', 'quarantined', 'spam', 'clean' );
+
+		if ( ! empty( $filter['verdicts'] ) && is_array( $filter['verdicts'] ) ) {
+			$verdicts = array_values(
+				array_intersect(
+					array_map( 'sanitize_key', $filter['verdicts'] ),
+					$allowed
+				)
+			);
+			if ( ! empty( $verdicts ) ) {
+				$placeholders = implode( ',', array_fill( 0, count( $verdicts ), '%s' ) );
+				$where[]      = "verdict IN ({$placeholders})";
+				foreach ( $verdicts as $verdict ) {
+					$params[] = $verdict;
+				}
+			}
+		} elseif ( ! empty( $filter['verdict'] ) && in_array( $filter['verdict'], $allowed, true ) ) {
+			$where[]  = 'verdict = %s';
+			$params[] = $filter['verdict'];
+		}
+
+		if ( ! empty( $filter['layer'] ) ) {
+			$layer = sanitize_key( (string) $filter['layer'] );
+			if ( in_array( $layer, array( 'heuristic', 'ai', 'none' ), true ) ) {
+				$where[]  = 'layer = %s';
+				$params[] = $layer;
+			}
+		}
+
+		if ( ! empty( $filter['search'] ) ) {
+			$like     = '%' . $wpdb->esc_like( sanitize_text_field( (string) $filter['search'] ) ) . '%';
+			$where[]  = '(reason LIKE %s OR snippet LIKE %s OR form_title LIKE %s OR form_id LIKE %s)';
+			$params[] = $like;
+			$params[] = $like;
+			$params[] = $like;
+			$params[] = $like;
+		}
+
+		$date_range = isset( $filter['date_range'] ) ? sanitize_key( (string) $filter['date_range'] ) : '';
+		if ( in_array( $date_range, array( 'today', 'yesterday', '7days' ), true ) ) {
+			$now_ts = current_time( 'timestamp' );
+			$today  = gmdate( 'Y-m-d 00:00:00', $now_ts );
+
+			if ( 'today' === $date_range ) {
+				$where[]  = 'created_at >= %s';
+				$params[] = $today;
+			} elseif ( 'yesterday' === $date_range ) {
+				$yesterday = gmdate( 'Y-m-d 00:00:00', strtotime( '-1 day', $now_ts ) );
+				$where[]   = 'created_at >= %s AND created_at < %s';
+				$params[]  = $yesterday;
+				$params[]  = $today;
+			} else {
+				$since    = gmdate( 'Y-m-d H:i:s', strtotime( '-7 days', $now_ts ) );
+				$where[]  = 'created_at >= %s';
+				$params[] = $since;
+			}
+		}
+
+		if ( ! empty( $filter['ids'] ) && is_array( $filter['ids'] ) ) {
+			$ids = array_values(
+				array_unique(
+					array_filter(
+						array_map( 'absint', $filter['ids'] ),
+						static function ( int $id ): bool {
+							return $id > 0;
+						}
+					)
+				)
+			);
+			if ( ! empty( $ids ) ) {
+				$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+				$where[]      = "id IN ({$placeholders})";
+				foreach ( $ids as $id ) {
+					$params[] = $id;
+				}
+			}
+		}
+
+		return array( $where, $params );
+	}
+
+	/**
+	 * Count log rows matching optional filters.
+	 *
+	 * @param array<string, mixed> $filter Optional filters: verdict, layer, search.
+	 *
+	 * @return int
+	 */
+	public static function count( array $filter = array() ): int {
+		global $wpdb;
+
+		$table = LD_FG_DB::table_name( 'logs' );
+
+		if ( '' === $table ) {
+			return 0;
+		}
+
+		list( $where, $params ) = self::build_filter_clause( $filter );
+		$params                 = array_merge( array( $table ), $params );
+		$sql                    = 'SELECT COUNT(*) FROM %i WHERE ' . implode( ' AND ', $where );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $where fragments are fixed whitelist SQL; values bound via $wpdb->prepare().
+		$count = $wpdb->get_var( $wpdb->prepare( $sql, ...$params ) );
+
+		return max( 0, (int) $count );
+	}
+
+	/**
 	 * Query recent log rows.
 	 *
 	 * @param int                  $limit  Max rows.
-	 * @param array<string, mixed> $filter Optional filters: verdict, layer, search.
+	 * @param array<string, mixed> $filter Optional filters: verdict, layer, search, offset.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -98,36 +217,130 @@ final class LD_FG_Logger {
 			return array();
 		}
 
-		$limit   = max( 1, min( 500, $limit ) );
-		$where   = array( '1=1' );
-		$params  = array( $table );
-		$allowed = array( 'blocked', 'allowed', 'quarantined', 'spam', 'clean' );
+		$limit  = max( 1, min( 500, $limit ) );
+		$offset = isset( $filter['offset'] ) ? max( 0, (int) $filter['offset'] ) : 0;
 
-		if ( ! empty( $filter['verdict'] ) && in_array( $filter['verdict'], $allowed, true ) ) {
-			$where[]  = 'verdict = %s';
-			$params[] = $filter['verdict'];
-		}
-
-		if ( ! empty( $filter['layer'] ) ) {
-			$where[]  = 'layer = %s';
-			$params[] = sanitize_key( (string) $filter['layer'] );
-		}
-
-		if ( ! empty( $filter['search'] ) ) {
-			$like     = '%' . $wpdb->esc_like( sanitize_text_field( (string) $filter['search'] ) ) . '%';
-			$where[]  = '(reason LIKE %s OR snippet LIKE %s OR form_title LIKE %s)';
-			$params[] = $like;
-			$params[] = $like;
-			$params[] = $like;
-		}
-
-		$params[] = $limit;
-		$sql      = 'SELECT * FROM %i WHERE ' . implode( ' AND ', $where ) . ' ORDER BY created_at DESC, id DESC LIMIT %d';
+		list( $where, $params ) = self::build_filter_clause( $filter );
+		$params                 = array_merge( array( $table ), $params, array( $limit, $offset ) );
+		$sql                    = 'SELECT * FROM %i WHERE ' . implode( ' AND ', $where ) . ' ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $where fragments are fixed whitelist SQL; values bound via $wpdb->prepare().
 		$rows = $wpdb->get_results( $wpdb->prepare( $sql, ...$params ), ARRAY_A );
 
 		return is_array( $rows ) ? $rows : array();
+	}
+
+	/**
+	 * Permanently delete log rows by ID (also clears per-user read markers).
+	 *
+	 * @param array<int, int> $ids Log IDs.
+	 *
+	 * @return int Number of deleted log rows.
+	 */
+	public static function delete_ids( array $ids ): int {
+		global $wpdb;
+
+		$logs_table  = LD_FG_DB::table_name( 'logs' );
+		$reads_table = LD_FG_DB::table_name( 'log_reads' );
+
+		if ( '' === $logs_table ) {
+			return 0;
+		}
+
+		$ids = array_values(
+			array_unique(
+				array_filter(
+					array_map( 'absint', $ids ),
+					static function ( int $id ): bool {
+						return $id > 0;
+					}
+				)
+			)
+		);
+
+		if ( empty( $ids ) ) {
+			return 0;
+		}
+
+		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+
+		if ( '' !== $reads_table ) {
+			$read_params = array_merge( array( $reads_table ), $ids );
+			$read_sql    = "DELETE FROM %i WHERE log_id IN ({$placeholders})";
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- IN placeholders are %d; table via %i.
+			$wpdb->query( $wpdb->prepare( $read_sql, ...$read_params ) );
+		}
+
+		$params = array_merge( array( $logs_table ), $ids );
+		$sql    = "DELETE FROM %i WHERE id IN ({$placeholders})";
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- IN placeholders are %d; table via %i.
+		$deleted = $wpdb->query( $wpdb->prepare( $sql, ...$params ) );
+
+		return false === $deleted ? 0 : (int) $deleted;
+	}
+
+	/**
+	 * Delete every security log (and read markers).
+	 *
+	 * @return int Number of deleted log rows.
+	 */
+	public static function delete_all(): int {
+		global $wpdb;
+
+		$logs_table  = LD_FG_DB::table_name( 'logs' );
+		$reads_table = LD_FG_DB::table_name( 'log_reads' );
+
+		if ( '' === $logs_table ) {
+			return 0;
+		}
+
+		$total = self::count();
+
+		if ( '' !== $reads_table ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $reads_table ) );
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $logs_table ) );
+
+		return $total;
+	}
+
+	/**
+	 * Purge logs older than the configured retention window.
+	 *
+	 * @param int $days Retention days (rows older than this are removed).
+	 *
+	 * @return int Number of deleted log rows.
+	 */
+	public static function purge_older_than( int $days ): int {
+		global $wpdb;
+
+		$logs_table = LD_FG_DB::table_name( 'logs' );
+		$days       = max( 1, min( 3650, $days ) );
+
+		if ( '' === $logs_table ) {
+			return 0;
+		}
+
+		$cutoff = gmdate( 'Y-m-d H:i:s', strtotime( '-' . $days . ' days', current_time( 'timestamp' ) ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				'SELECT id FROM %i WHERE created_at < %s',
+				$logs_table,
+				$cutoff
+			)
+		);
+
+		if ( ! is_array( $ids ) || empty( $ids ) ) {
+			return 0;
+		}
+
+		return self::delete_ids( array_map( 'absint', $ids ) );
 	}
 
 	/**
@@ -372,6 +585,136 @@ final class LD_FG_Logger {
 		);
 
 		return false !== $result;
+	}
+
+	/**
+	 * Mark many log entries as read for a user.
+	 *
+	 * @param array<int, int> $log_ids Log IDs.
+	 * @param int             $user_id WordPress user ID.
+	 *
+	 * @return int Number of rows marked.
+	 */
+	public static function mark_read_ids( array $log_ids, int $user_id ): int {
+		$marked = 0;
+		foreach ( $log_ids as $log_id ) {
+			if ( self::mark_read( (int) $log_id, $user_id ) ) {
+				++$marked;
+			}
+		}
+		return $marked;
+	}
+
+	/**
+	 * Mark a log entry as unread for a user (remove read marker).
+	 *
+	 * @param int $log_id  Log ID.
+	 * @param int $user_id WordPress user ID.
+	 *
+	 * @return bool
+	 */
+	public static function mark_unread( int $log_id, int $user_id ): bool {
+		global $wpdb;
+
+		$table = LD_FG_DB::table_name( 'log_reads' );
+
+		if ( '' === $table || $log_id <= 0 || $user_id <= 0 ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$result = $wpdb->delete(
+			$table,
+			array(
+				'log_id'  => $log_id,
+				'user_id' => $user_id,
+			),
+			array( '%d', '%d' )
+		);
+
+		return false !== $result;
+	}
+
+	/**
+	 * Mark many log entries as unread for a user.
+	 *
+	 * @param array<int, int> $log_ids Log IDs.
+	 * @param int             $user_id WordPress user ID.
+	 *
+	 * @return int Number of rows unmarked.
+	 */
+	public static function mark_unread_ids( array $log_ids, int $user_id ): int {
+		$marked = 0;
+		foreach ( $log_ids as $log_id ) {
+			if ( self::mark_unread( (int) $log_id, $user_id ) ) {
+				++$marked;
+			}
+		}
+		return $marked;
+	}
+
+	/**
+	 * Aggregate counts for the Logs KPI strip (today + lifetime ratios).
+	 *
+	 * @return array{total_today: int, blocked_today: int, quarantine_ratio: float, avg_confidence: float, blocked: int, allowed: int, quarantined: int, total: int}
+	 */
+	public static function logs_page_stats(): array {
+		global $wpdb;
+
+		$table = LD_FG_DB::table_name( 'logs' );
+		$empty = array(
+			'total_today'      => 0,
+			'blocked_today'    => 0,
+			'quarantine_ratio' => 0.0,
+			'avg_confidence'   => 0.0,
+			'blocked'          => 0,
+			'allowed'          => 0,
+			'quarantined'      => 0,
+			'total'            => 0,
+		);
+
+		if ( '' === $table ) {
+			return $empty;
+		}
+
+		$today_start = gmdate( 'Y-m-d 00:00:00', current_time( 'timestamp' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$total_today = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM %i WHERE created_at >= %s',
+				$table,
+				$today_start
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$blocked_today = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM %i WHERE created_at >= %s AND verdict = 'blocked'",
+				$table,
+				$today_start
+			)
+		);
+
+		$total       = self::count();
+		$blocked     = self::count( array( 'verdict' => 'blocked' ) );
+		$allowed     = self::count( array( 'verdict' => 'allowed' ) );
+		$quarantined = self::count( array( 'verdict' => 'quarantined' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$avg = $wpdb->get_var( $wpdb->prepare( 'SELECT AVG(confidence) FROM %i', $table ) );
+
+		return array(
+			'total_today'      => max( 0, $total_today ),
+			'blocked_today'    => max( 0, $blocked_today ),
+			'quarantine_ratio' => $total > 0 ? round( ( $quarantined / $total ) * 100, 1 ) : 0.0,
+			'avg_confidence'   => round( (float) $avg * 100, 1 ),
+			'blocked'          => $blocked,
+			'allowed'          => $allowed,
+			'quarantined'      => $quarantined,
+			'total'            => $total,
+		);
 	}
 
 	/**

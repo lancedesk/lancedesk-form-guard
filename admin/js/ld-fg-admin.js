@@ -456,7 +456,9 @@
 
 	document.querySelectorAll('.ld-fg-log-row').forEach(function (row) {
 		row.addEventListener('click', function (e) {
-			if (e.target.closest('button')) return;
+			if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.ld-fg-log-check-cell')) {
+				return;
+			}
 			openDrawer(row);
 		});
 		row.style.cursor = 'pointer';
@@ -487,10 +489,458 @@
 		});
 	});
 
+	// Logs: bulk actions, columns, density, delete-all modal, selected export.
+	(function initLogsPage() {
+		var page = document.querySelector('.ld-fg-logs-page');
+		if (!page) {
+			return;
+		}
+
+		var selectAll = page.querySelector('.ld-fg-logs-select-all');
+		var bulkSelect = page.querySelector('.ld-fg-bulk-action-select');
+		var bulkApply = page.querySelector('.ld-fg-bulk-apply');
+		var countWrap = page.querySelector('.ld-fg-bulk-selected-count');
+		var countText = page.querySelector('.ld-fg-bulk-selected-count-text');
+		var deselectBtn = page.querySelector('.ld-fg-bulk-deselect');
+		var deleteAllBtns = page.querySelectorAll('.ld-fg-delete-all-logs');
+		var modal = document.getElementById('ld-fg-delete-modal-overlay');
+		var modalCancel = page.querySelector('.ld-fg-delete-modal-cancel');
+		var modalConfirm = page.querySelector('.ld-fg-delete-modal-confirm');
+		var columnsMenu = document.getElementById('ld-fg-logs-columns-menu');
+		var columnsBtns = page.querySelectorAll('.ld-fg-logs-columns-btn, .ld-fg-logs-columns-btn-secondary');
+		var densityBtn = page.querySelector('.ld-fg-logs-density');
+		var tableCard = page.querySelector('.ld-fg-logs-card');
+		var filterForm = page.querySelector('.ld-fg-logs-filters');
+		var resetBtn = page.querySelector('.ld-fg-logs-reset');
+		var filterSelects = filterForm
+			? Array.prototype.slice.call(filterForm.querySelectorAll('select'))
+			: [];
+		var COLS_KEY = 'ldFgLogsColumns';
+		var DENSITY_KEY = 'ldFgLogsDensity';
+		var checks = Array.prototype.slice.call(page.querySelectorAll('.ld-fg-log-check'));
+
+		function syncFilterReset() {
+			if (!resetBtn || !filterSelects.length) {
+				return;
+			}
+			var dirty = filterSelects.some(function (el) {
+				return String(el.value || '') !== '';
+			});
+			if (dirty) {
+				resetBtn.classList.remove('hidden');
+				resetBtn.removeAttribute('hidden');
+			} else {
+				resetBtn.classList.add('hidden');
+				resetBtn.setAttribute('hidden', 'hidden');
+			}
+		}
+
+		filterSelects.forEach(function (el) {
+			el.addEventListener('change', syncFilterReset);
+		});
+		syncFilterReset();
+
+		function selectedIds() {
+			return checks.filter(function (el) { return el.checked; }).map(function (el) { return el.value; });
+		}
+
+		function selectedRows() {
+			return checks.filter(function (el) { return el.checked; }).map(function (el) {
+				return el.closest('.ld-fg-log-row');
+			}).filter(Boolean);
+		}
+
+		function syncRowHighlight() {
+			checks.forEach(function (el) {
+				var row = el.closest('.ld-fg-log-row');
+				if (!row) {
+					return;
+				}
+				if (el.checked) {
+					row.classList.add('is-selected');
+				} else {
+					row.classList.remove('is-selected');
+				}
+			});
+		}
+
+		function syncBulkState() {
+			var ids = selectedIds();
+			var n = ids.length;
+			var action = bulkSelect ? bulkSelect.value : '';
+			if (bulkApply) {
+				bulkApply.disabled = n < 1 || !action;
+			}
+			if (countWrap && countText) {
+				if (n < 1) {
+					countWrap.classList.add('hidden');
+					if (deselectBtn) {
+						deselectBtn.classList.add('hidden');
+					}
+				} else {
+					countWrap.classList.remove('hidden');
+					countText.textContent = n === 1 ? '1 selected' : n + ' selected';
+					if (deselectBtn) {
+						deselectBtn.classList.remove('hidden');
+					}
+				}
+			}
+			if (selectAll && checks.length) {
+				selectAll.checked = n === checks.length;
+				selectAll.indeterminate = n > 0 && n < checks.length;
+			}
+			syncRowHighlight();
+		}
+
+		function clearSelection() {
+			checks.forEach(function (el) { el.checked = false; });
+			if (selectAll) {
+				selectAll.checked = false;
+				selectAll.indeterminate = false;
+			}
+			syncBulkState();
+		}
+
+		if (selectAll) {
+			selectAll.addEventListener('change', function () {
+				checks.forEach(function (el) {
+					el.checked = selectAll.checked;
+				});
+				syncBulkState();
+			});
+		}
+
+		checks.forEach(function (el) {
+			el.addEventListener('change', syncBulkState);
+		});
+
+		if (bulkSelect) {
+			bulkSelect.addEventListener('change', syncBulkState);
+		}
+
+		if (deselectBtn) {
+			deselectBtn.addEventListener('click', function (e) {
+				e.preventDefault();
+				clearSelection();
+			});
+		}
+
+		function exportSelectedCsv(rows) {
+			var lines = [['Date', 'Form', 'Verdict', 'Layer', 'Confidence', 'Reason'].join(',')];
+			rows.forEach(function (row) {
+				function q(v) {
+					return '"' + String(v || '').replace(/"/g, '""') + '"';
+				}
+				lines.push([
+					q(row.getAttribute('data-export-date')),
+					q(row.getAttribute('data-export-form')),
+					q(row.getAttribute('data-export-verdict')),
+					q(row.getAttribute('data-export-layer')),
+					q(row.getAttribute('data-export-confidence')),
+					q(row.getAttribute('data-export-reason'))
+				].join(','));
+			});
+			var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+			var url = URL.createObjectURL(blob);
+			var a = document.createElement('a');
+			a.href = url;
+			a.download = 'lancedesk-form-guard-selected.csv';
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			URL.revokeObjectURL(url);
+		}
+
+		if (bulkApply) {
+			bulkApply.addEventListener('click', function () {
+				var ids = selectedIds();
+				var action = bulkSelect ? bulkSelect.value : '';
+				if (!ids.length || !action || bulkApply.disabled) {
+					return;
+				}
+
+				if (action === 'export-selected') {
+					exportSelectedCsv(selectedRows());
+					return;
+				}
+
+				if (action === 'trash') {
+					if (!window.confirm('Delete ' + ids.length + ' selected log entr' + (ids.length === 1 ? 'y' : 'ies') + '? This cannot be undone.')) {
+						return;
+					}
+					bulkApply.disabled = true;
+					post('ld_fg_delete_logs', { ids: JSON.stringify(ids) }).then(function (payload) {
+						if (payload && payload.success) {
+							window.location.reload();
+							return;
+						}
+						bulkApply.disabled = false;
+						window.alert((payload && payload.data && payload.data.message) ? payload.data.message : 'Could not delete logs.');
+					}).fail(function () {
+						bulkApply.disabled = false;
+						window.alert('Could not delete logs.');
+					});
+					return;
+				}
+
+				if (action === 'mark-read' || action === 'mark-unread') {
+					bulkApply.disabled = true;
+					post('ld_fg_bulk_logs', { bulk: action, ids: JSON.stringify(ids) }).then(function (payload) {
+						if (payload && payload.success) {
+							window.location.reload();
+							return;
+						}
+						bulkApply.disabled = false;
+						window.alert((payload && payload.data && payload.data.message) ? payload.data.message : 'Could not update logs.');
+					}).fail(function () {
+						bulkApply.disabled = false;
+						window.alert('Could not update logs.');
+					});
+				}
+			});
+		}
+
+		var modalTitle = modal ? modal.querySelector('.ld-fg-delete-modal-title') : null;
+		var modalBody = modal ? modal.querySelector('.ld-fg-delete-modal-body') : null;
+		var modalConfirmLabel = modal ? modal.querySelector('.ld-fg-delete-modal-confirm-label') : null;
+		var drawerDeleteBtn = document.querySelector('.ld-fg-drawer-delete');
+
+		function applyDeleteModalCopy(mode) {
+			if (!modal) {
+				return;
+			}
+			var isSingle = mode === 'single';
+			modal.setAttribute('data-mode', isSingle ? 'single' : 'all');
+			if (modalTitle) {
+				modalTitle.textContent = modal.getAttribute(isSingle ? 'data-title-single' : 'data-title-all') || '';
+			}
+			if (modalBody) {
+				modalBody.textContent = modal.getAttribute(isSingle ? 'data-body-single' : 'data-body-all') || '';
+			}
+			if (modalConfirmLabel) {
+				modalConfirmLabel.textContent = modal.getAttribute(isSingle ? 'data-confirm-single' : 'data-confirm-all') || '';
+			}
+		}
+
+		function openDeleteModal(mode, logId) {
+			if (!modal) {
+				return;
+			}
+			applyDeleteModalCopy(mode === 'single' ? 'single' : 'all');
+			modal.setAttribute('data-log-id', mode === 'single' && logId ? String(logId) : '');
+			modal.classList.remove('hidden');
+			modal.removeAttribute('hidden');
+			modal.setAttribute('aria-hidden', 'false');
+			document.body.classList.add('ld-fg-modal-open');
+		}
+
+		function closeDeleteModal() {
+			if (!modal) {
+				return;
+			}
+			modal.classList.add('hidden');
+			modal.setAttribute('hidden', 'hidden');
+			modal.setAttribute('aria-hidden', 'true');
+			modal.setAttribute('data-log-id', '');
+			modal.setAttribute('data-mode', 'all');
+			document.body.classList.remove('ld-fg-modal-open');
+		}
+
+		deleteAllBtns.forEach(function (btn) {
+			btn.addEventListener('click', function (e) {
+				e.preventDefault();
+				openDeleteModal('all');
+			});
+		});
+
+		if (drawerDeleteBtn) {
+			drawerDeleteBtn.addEventListener('click', function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (!activeLogId) {
+					return;
+				}
+				openDeleteModal('single', activeLogId);
+			});
+		}
+
+		if (modalCancel) {
+			modalCancel.addEventListener('click', closeDeleteModal);
+		}
+
+		if (modal) {
+			modal.addEventListener('click', function (e) {
+				if (e.target === modal) {
+					closeDeleteModal();
+				}
+			});
+		}
+
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+				closeDeleteModal();
+			}
+		});
+
+		if (modalConfirm) {
+			modalConfirm.addEventListener('click', function () {
+				var mode = modal ? modal.getAttribute('data-mode') : 'all';
+				var singleId = modal ? modal.getAttribute('data-log-id') : '';
+				var payloadData = mode === 'single' && singleId
+					? { ids: JSON.stringify([singleId]) }
+					: { delete_all: '1' };
+				var busyLabel = mode === 'single' ? 'Deleting…' : 'Purging…';
+
+				modalConfirm.disabled = true;
+				var label = modalConfirm.innerHTML;
+				modalConfirm.innerHTML = '<span class="ld-fg-icon material-symbols-outlined text-[16px]">progress_activity</span> ' + busyLabel;
+				post('ld_fg_delete_logs', payloadData).then(function (payload) {
+					if (payload && payload.success) {
+						window.location.reload();
+						return;
+					}
+					modalConfirm.disabled = false;
+					modalConfirm.innerHTML = label;
+					window.alert((payload && payload.data && payload.data.message) ? payload.data.message : 'Could not delete logs.');
+				}).fail(function () {
+					modalConfirm.disabled = false;
+					modalConfirm.innerHTML = label;
+					window.alert('Could not delete logs.');
+				});
+			});
+		}
+
+		function applyColumns(state) {
+			['timestamp', 'form', 'verdict', 'layer', 'confidence', 'reason'].forEach(function (col) {
+				var show = state[col] !== false;
+				page.querySelectorAll('[data-col="' + col + '"]').forEach(function (el) {
+					if (show) {
+						el.classList.remove('ld-fg-col-hidden');
+					} else {
+						el.classList.add('ld-fg-col-hidden');
+					}
+				});
+				if (columnsMenu) {
+					var input = columnsMenu.querySelector('input[data-col="' + col + '"]');
+					if (input) {
+						input.checked = show;
+					}
+				}
+			});
+		}
+
+		function loadColumns() {
+			var state = {};
+			try {
+				state = JSON.parse(window.localStorage.getItem(COLS_KEY) || '{}') || {};
+			} catch (err) {
+				state = {};
+			}
+			applyColumns(state);
+		}
+
+		function saveColumns() {
+			if (!columnsMenu) {
+				return;
+			}
+			var state = {};
+			columnsMenu.querySelectorAll('input[data-col]').forEach(function (input) {
+				state[input.getAttribute('data-col')] = !!input.checked;
+			});
+			try {
+				window.localStorage.setItem(COLS_KEY, JSON.stringify(state));
+			} catch (err) { /* ignore */ }
+			applyColumns(state);
+		}
+
+		function setColumnsOpen(open) {
+			if (!columnsMenu) {
+				return;
+			}
+			if (open) {
+				columnsMenu.classList.remove('hidden');
+				columnsMenu.removeAttribute('hidden');
+			} else {
+				columnsMenu.classList.add('hidden');
+				columnsMenu.setAttribute('hidden', 'hidden');
+			}
+			columnsBtns.forEach(function (btn) {
+				btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+			});
+		}
+
+		columnsBtns.forEach(function (btn) {
+			btn.addEventListener('click', function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				var open = columnsMenu && columnsMenu.classList.contains('hidden');
+				setColumnsOpen(open);
+			});
+		});
+
+		if (columnsMenu) {
+			columnsMenu.addEventListener('change', saveColumns);
+			columnsMenu.addEventListener('click', function (e) {
+				e.stopPropagation();
+			});
+		}
+
+		document.addEventListener('click', function () {
+			setColumnsOpen(false);
+		});
+
+		if (densityBtn && tableCard) {
+			var compact = false;
+			try {
+				compact = window.localStorage.getItem(DENSITY_KEY) === '1';
+			} catch (err) { /* ignore */ }
+			function syncDensity() {
+				tableCard.classList.toggle('is-compact', compact);
+				densityBtn.setAttribute('aria-pressed', compact ? 'true' : 'false');
+			}
+			syncDensity();
+			densityBtn.addEventListener('click', function () {
+				compact = !compact;
+				try {
+					window.localStorage.setItem(DENSITY_KEY, compact ? '1' : '0');
+				} catch (err) { /* ignore */ }
+				syncDensity();
+			});
+		}
+
+		loadColumns();
+		syncBulkState();
+	})();
+
 	// Settings form
 	var settingsForm = document.getElementById('ld-fg-settings-form');
 	var settingsSaveBtn = document.getElementById('ld-fg-save-btn');
 	var settingsDirty = null;
+	var keepLogsToggle = document.getElementById('ld-fg-keep-logs');
+	var retentionWrap = document.getElementById('ld-fg-retention-wrap');
+	var retentionSelect = document.getElementById('ld-fg-log-retention');
+
+	function syncRetentionVisibility() {
+		if (!keepLogsToggle || !retentionWrap) {
+			return;
+		}
+		var keepOn = !!keepLogsToggle.checked;
+		retentionWrap.classList.toggle('hidden', keepOn);
+		if (retentionSelect) {
+			retentionSelect.disabled = keepOn;
+		}
+	}
+
+	if (keepLogsToggle) {
+		keepLogsToggle.addEventListener('change', function () {
+			syncRetentionVisibility();
+			if (settingsDirty) {
+				settingsDirty.sync();
+			}
+		});
+		syncRetentionVisibility();
+	}
+
 	if (settingsForm && settingsSaveBtn) {
 		settingsDirty = bindDirtySave(settingsForm, settingsSaveBtn);
 		settingsForm.addEventListener('submit', function (e) {
@@ -502,9 +952,11 @@
 				settingsForm.reportValidity();
 				return;
 			}
+			var keepLogs = keepLogsToggle && keepLogsToggle.checked ? 1 : 0;
 			var settings = {
 				enabled: document.getElementById('ld-fg-master-toggle') && document.getElementById('ld-fg-master-toggle').checked ? 1 : 0,
-				retention_days: document.getElementById('ld-fg-log-retention') ? document.getElementById('ld-fg-log-retention').value : 90,
+				keep_logs: keepLogs,
+				retention_days: retentionSelect ? retentionSelect.value : 90,
 				delete_on_uninstall: document.getElementById('ld-fg-delete-on-uninstall') && document.getElementById('ld-fg-delete-on-uninstall').checked ? 1 : 0,
 				privacy_ack: document.getElementById('ld-fg-privacy-ack') && document.getElementById('ld-fg-privacy-ack').checked ? 1 : 0,
 				protect_core_comments: document.getElementById('ld-fg-protect-comments') && document.getElementById('ld-fg-protect-comments').checked ? 1 : 0

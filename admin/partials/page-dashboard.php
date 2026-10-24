@@ -15,7 +15,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 $stats         = LD_FG_Logger::stats_7d( 7 );
 $top_reasons   = LD_FG_Logger::top_reasons( 7, 4 );
-$recent_logs   = LD_FG_Logger::query_recent( 4, array() );
+$recent_logs   = LD_FG_Logger::query_recent(
+	4,
+	array(
+		'verdicts' => array( 'blocked', 'quarantined', 'spam' ),
+	)
+);
 $chart_data    = LD_FG_Logger::daily_chart_data( 7 );
 $max_chart     = 1;
 
@@ -156,8 +161,12 @@ foreach ( $top_reasons as $reason_row ) :
 <?php else : ?>
 <?php foreach ( $recent_logs as $log ) : ?>
 <?php
-	$is_quarantine = ( 'quarantine' === $log['action'] || 'quarantined' === $log['status'] );
-	$layer_label   = ( 'ai' === $log['layer'] ) ? __( 'AI API', 'lancedesk-form-guard' ) : __( 'Heuristic', 'lancedesk-form-guard' );
+	$verdict       = (string) ( $log['verdict'] ?? '' );
+	$is_quarantine = ( 'quarantined' === $verdict || 'quarantine' === (string) ( $log['action'] ?? '' ) );
+	$layer_key     = (string) ( $log['layer'] ?? '' );
+	$layer_label   = ( 'ai' === $layer_key )
+		? __( 'AI API', 'lancedesk-form-guard' )
+		: ( 'none' === $layer_key ? __( 'None', 'lancedesk-form-guard' ) : __( 'Heuristic', 'lancedesk-form-guard' ) );
 	/* translators: %s: human-readable time difference, e.g. "2 mins". */
 	$time_ago = sprintf( __( '%s ago', 'lancedesk-form-guard' ), human_time_diff( strtotime( (string) $log['created_at'] ), (int) current_time( 'timestamp' ) ) );
 ?>
@@ -165,7 +174,7 @@ foreach ( $top_reasons as $reason_row ) :
 <td class="py-3 px-6 text-on-surface-variant"><?php echo esc_html( $time_ago ); ?></td>
 <td class="py-3 px-6 font-medium"><?php echo esc_html( $log['form_title'] ? $log['form_title'] : $log['form_id'] ); ?></td>
 <td class="py-3 px-6">
-<?php if ( 'ai' === $log['layer'] ) : ?>
+<?php if ( 'ai' === $layer_key ) : ?>
 <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-label-md"><?php echo esc_html( $layer_label ); ?></span>
 <?php else : ?>
 <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-[11px] font-label-md"><?php echo esc_html( $layer_label ); ?></span>

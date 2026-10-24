@@ -84,6 +84,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 </div>
 <div class="p-margin-md border-t border-outline bg-surface flex-shrink-0 flex items-center justify-between gap-margin-sm shadow-[0_-2px_4px_rgba(0,0,0,0.02)]">
 <button type="button" class="ld-fg-drawer-close h-8 px-4 rounded bg-transparent border-0 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors"><?php esc_html_e( 'Close', 'lancedesk-form-guard' ); ?></button>
+<div class="flex items-center gap-margin-sm ml-auto">
 <div id="ld-fg-drawer-quarantine-actions" class="flex gap-margin-sm">
 <button type="button" class="ld-fg-discard-quarantine h-8 px-4 rounded bg-surface border border-outline text-error font-label-md text-label-md hover:bg-error-container/10 transition-colors flex items-center gap-1.5">
 <span class="ld-fg-icon material-symbols-outlined text-[16px]">delete</span>
@@ -92,6 +93,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 <button type="button" class="ld-fg-release-quarantine h-8 px-4 rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-1.5">
 <span class="ld-fg-icon material-symbols-outlined text-[16px]">check_circle</span>
 <?php esc_html_e( 'Release', 'lancedesk-form-guard' ); ?>
+</button>
+</div>
+<button type="button" class="ld-fg-drawer-delete h-8 px-4 rounded bg-[#d63638] text-white font-label-md text-label-md hover:bg-[#b32d2e] transition-colors shadow-sm flex items-center gap-1.5 border-0 cursor-pointer">
+<span class="ld-fg-icon material-symbols-outlined text-[16px]" aria-hidden="true">delete_forever</span>
+<?php esc_html_e( 'Delete', 'lancedesk-form-guard' ); ?>
 </button>
 </div>
 </div>

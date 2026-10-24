@@ -27,6 +27,22 @@ final class LD_FG_Activator {
 			add_option( 'ld_fg_installed_at', time() );
 		}
 
+		if ( ! wp_next_scheduled( 'ld_fg_daily_retention_purge' ) ) {
+			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'ld_fg_daily_retention_purge' );
+		}
+
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * Clear scheduled events on deactivation.
+	 *
+	 * @return void
+	 */
+	public static function deactivate(): void {
+		$timestamp = wp_next_scheduled( 'ld_fg_daily_retention_purge' );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, 'ld_fg_daily_retention_purge' );
+		}
 	}
 }

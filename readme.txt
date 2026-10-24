@@ -4,7 +4,7 @@ Tags: spam, forms, security, ai, antispam
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.1.11
+Stable tag: 0.1.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -90,6 +90,27 @@ This plugin optionally connects to third-party AI APIs to classify form submissi
 7. Log detail drawer with integration, layer, provider, confidence, reason, and captured fields.
 
 == Changelog ==
+
+= 0.1.16 =
+* Dashboard: Recent Blocks only lists blocked/quarantined entries (no longer shows Allowed submissions as “Blocked”).
+
+= 0.1.15 =
+* Security Logs: detail drawer Delete (bottom right) opens the FG-L1d confirm modal for that entry.
+
+= 0.1.14 =
+* Security Logs: Reset filter link only appears when a select filter is active.
+* Security Logs: Reason column is reason-only (payload stays in the detail drawer) to free table width.
+
+= 0.1.13 =
+* Security Logs redesign (Stitch FG-L1b): KPI strip, richer filters (layer + date), WP bulk actions (mark read/unread, export selected, delete), unread dots, middle-aligned rows.
+* Header actions: Export CSV, Columns (hide/show), Clear All Logs with confirm modal.
+* CSV export respects current filters; selected-row export from bulk menu.
+
+= 0.1.12 =
+* Security Logs: pagination (25 per page) and accurate “Showing X to Y of Z” totals.
+* Security Logs: per-row checkboxes, Delete selected, and Delete all.
+* Security Logs: server-side search and verdict filter.
+* Settings: “Keep security logs” toggle (default on). Turning it off reveals retention (15/30/90/180 days) for automatic daily purge.
 
 = 0.1.11 =
 * External adapters via `ld_fg_adapters` filter for custom form integrations.
